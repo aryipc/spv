@@ -32,10 +32,17 @@ export function ImageUpload({ onImageGenerated }: ImageUploadProps) {
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
       setIsDragging(false)
+
       const files = Array.from(e.dataTransfer.files)
       if (files.length > 0) {
-        handleFileUpload(files[0])
+        const file = files[0]
+        if (file.type.startsWith("image/")) {
+          handleFileUpload(file)
+        } else {
+          alert("🚫 Please drop an image file! 🖼️")
+        }
       }
     },
     [handleFileUpload],
@@ -43,12 +50,23 @@ export function ImageUpload({ onImageGenerated }: ImageUploadProps) {
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setIsDragging(true)
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(false)
+    e.stopPropagation()
+    // Only set dragging to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false)
+    }
   }, [])
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,24 +120,43 @@ export function ImageUpload({ onImageGenerated }: ImageUploadProps) {
 
       {!uploadedImage ? (
         <div
-          className={`border-4 border-dashed rounded-xl p-8 text-center transition-all duration-300 paper-texture ${
+          className={`border-4 border-dashed rounded-xl p-8 text-center transition-all duration-300 paper-texture relative overflow-hidden ${
             isDragging
-              ? "border-secondary bg-secondary/30 animate-wiggle"
-              : "border-border hover:border-secondary hover:bg-secondary/10"
+              ? "border-secondary bg-secondary/40 animate-wiggle scale-105 shadow-lg"
+              : "border-border hover:border-secondary hover:bg-secondary/10 hover:scale-102"
           }`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
         >
+          {isDragging && (
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary/30 to-primary/20 rounded-xl flex items-center justify-center z-10">
+              <div className="text-center animate-bounce">
+                <Upload className="h-16 w-16 text-secondary mx-auto mb-2" />
+                <p className="text-2xl font-black text-secondary uppercase">🎯 Drop It Here! 🎯</p>
+              </div>
+            </div>
+          )}
+
           <div className="animate-float">
-            <ImageIcon className="h-20 w-20 text-primary mx-auto mb-4" />
+            <ImageIcon
+              className={`h-20 w-20 text-primary mx-auto mb-4 transition-all duration-300 ${isDragging ? "scale-110" : ""}`}
+            />
           </div>
           <div className="bg-card rounded-lg p-4 mb-4 border-2 border-border">
-            <p className="text-card-foreground mb-2 text-xl font-bold">🎨 Drop your awesome image here! 🎨</p>
-            <p className="text-muted-foreground text-sm">Or click the button below to browse</p>
+            <p className="text-card-foreground mb-2 text-xl font-bold">
+              {isDragging ? "🎨 Release to upload! 🎨" : "🎨 Drag & Drop or Click to Upload! 🎨"}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {isDragging ? "Let go of that awesome image!" : "Supports JPG, PNG, GIF and more!"}
+            </p>
           </div>
           <input type="file" accept="image/*" onChange={handleFileInput} className="hidden" id="file-upload" />
-          <Button asChild className="south-park-button text-primary-foreground">
+          <Button
+            asChild
+            className={`south-park-button text-primary-foreground transition-all duration-300 ${isDragging ? "scale-110" : ""}`}
+          >
             <label htmlFor="file-upload" className="cursor-pointer">
               <Upload className="mr-2 h-5 w-5" />
               Choose Image
