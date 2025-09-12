@@ -73,7 +73,7 @@ export function VideoBackground() {
         playsInline
         preload="metadata"
       >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/7%E6%9C%8830%E6%97%A5%20%281%29-B64RmDQXbKAqiTmhNru5AWnG9J7nVe.mp4" type="video/mp4" />
+        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/9%E6%9C%8811%E6%97%A5%281%29-kXJ1gsy7cgQHMhAhgDf3WXOOUFF0d6.mp4" type="video/mp4" />
       </video>
 
       <video
@@ -87,7 +87,7 @@ export function VideoBackground() {
         playsInline
         preload="metadata"
       >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/7%E6%9C%8830%E6%97%A5%20%281%29-B64RmDQXbKAqiTmhNru5AWnG9J7nVe.mp4" type="video/mp4" />
+        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/9%E6%9C%8811%E6%97%A5%281%29-kXJ1gsy7cgQHMhAhgDf3WXOOUFF0d6.mp4" type="video/mp4" />
       </video>
 
       {showFallback && (
