@@ -93,62 +93,79 @@ export function ImageUpload({ onImageGenerated }: ImageUploadProps) {
   }
 
   return (
-    <Card className="p-6 bg-black/40 backdrop-blur-md border-white/30">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">Upload Image</h2>
+    <Card className="south-park-card paper-texture p-8 animate-fade-in-up">
+      <div className="bg-secondary/20 rounded-lg p-4 mb-6 border-2 border-dashed border-secondary">
+        <h2 className="text-3xl font-black text-card-foreground text-center uppercase tracking-wide">
+          📸 Upload Your Image! 📸
+        </h2>
+      </div>
 
       {!uploadedImage ? (
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 ${
-            isDragging ? "border-blue-400 bg-blue-400/20" : "border-white/40 hover:border-white/60"
+          className={`border-4 border-dashed rounded-xl p-8 text-center transition-all duration-300 paper-texture ${
+            isDragging
+              ? "border-secondary bg-secondary/30 animate-wiggle"
+              : "border-border hover:border-secondary hover:bg-secondary/10"
           }`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <ImageIcon className="h-16 w-16 text-white/80 mx-auto mb-4" />
-          <p className="text-white mb-4 text-lg">Drag and drop your image here, or click to select</p>
+          <div className="animate-float">
+            <ImageIcon className="h-20 w-20 text-primary mx-auto mb-4" />
+          </div>
+          <div className="bg-card rounded-lg p-4 mb-4 border-2 border-border">
+            <p className="text-card-foreground mb-2 text-xl font-bold">🎨 Drop your awesome image here! 🎨</p>
+            <p className="text-muted-foreground text-sm">Or click the button below to browse</p>
+          </div>
           <input type="file" accept="image/*" onChange={handleFileInput} className="hidden" id="file-upload" />
-          <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button asChild className="south-park-button text-primary-foreground">
             <label htmlFor="file-upload" className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              Select Image
+              <Upload className="mr-2 h-5 w-5" />
+              Choose Image
             </label>
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="relative">
-            <img
-              src={uploadedImage || "/placeholder.svg"}
-              alt="Uploaded"
-              className="w-full h-64 object-cover rounded-lg"
-            />
-            <Button onClick={clearImage} size="sm" variant="destructive" className="absolute top-2 right-2">
+            <div className="border-4 border-secondary rounded-xl p-2 bg-secondary/20">
+              <img
+                src={uploadedImage || "/placeholder.svg"}
+                alt="Uploaded"
+                className="w-full h-64 object-cover rounded-lg border-2 border-border"
+              />
+            </div>
+            <Button
+              onClick={clearImage}
+              size="sm"
+              className="absolute -top-2 -right-2 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-full w-8 h-8 p-0 border-2 border-border"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="space-y-3">
-            <Input
-              placeholder="Enter a prompt to enhance your image (optional)"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
-            />
+          <div className="space-y-4">
+            <div className="bg-card rounded-lg p-3 border-2 border-border">
+              <Input
+                placeholder="✨ Add some magic words to enhance your image! ✨"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="bg-input border-2 border-border text-card-foreground placeholder:text-muted-foreground font-medium"
+              />
+            </div>
             <Button
               onClick={generateImage}
               disabled={isGenerating}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full south-park-button text-primary-foreground text-lg py-6"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />🎭 Creating Magic...
                 </>
               ) : (
                 <>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Generate Enhanced Image
+                  <Wand2 className="mr-2 h-5 w-5" />🚀 Generate Awesome Image!
                 </>
               )}
             </Button>

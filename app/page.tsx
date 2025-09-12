@@ -35,7 +35,6 @@ export default function HomePage() {
     setError(null)
 
     try {
-      // First analyze the image to get prompt
       const analyzeForm = new FormData()
       analyzeForm.append("image", selectedFile)
 
@@ -55,7 +54,6 @@ export default function HomePage() {
         throw new Error("无法生成描述")
       }
 
-      // Then generate the image
       const generateForm = new FormData()
       generateForm.append("image", selectedFile)
       generateForm.append("prompt", prompt)
@@ -104,47 +102,59 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/40 z-10"></div>
 
       <div className="relative z-20">
-        {/* Header */}
         <header className="text-center py-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">AI Image Generator</h1>
+            <div className="animate-float">
+              <Sparkles className="h-10 w-10 text-secondary" />
+            </div>
+            <h1 className="text-5xl md:text-6xl font-black text-white drop-shadow-lg uppercase tracking-wide">
+              🎨 AI Art Factory! 🎨
+            </h1>
+            <div className="animate-float" style={{ animationDelay: "0.5s" }}>
+              <Sparkles className="h-10 w-10 text-secondary" />
+            </div>
           </div>
-          <p className="text-lg text-white/90 max-w-2xl mx-auto px-4 drop-shadow-md">
-            Transform your images with the power of AI. Upload an image and watch it come to life in new styles.
-          </p>
+          <div className="bg-secondary/20 backdrop-blur-md rounded-xl p-4 max-w-3xl mx-auto border-3 border-secondary">
+            <p className="text-xl text-white font-bold drop-shadow-md">
+              🚀 Transform your boring images into AWESOME masterpieces! 🚀
+            </p>
+          </div>
         </header>
 
-        {/* Main Content */}
         <main className="max-w-6xl mx-auto px-4 pb-12">
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Upload Area */}
-            <Card className="bg-black/20 backdrop-blur-xl border-white/20 shadow-2xl hover:bg-black/25 transition-all duration-300">
+            <Card className="south-park-card paper-texture">
               <CardContent className="p-8">
-                <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4 mb-6">
-                  <h2 className="text-2xl font-semibold text-white drop-shadow-lg">Upload Your Image</h2>
+                <div className="bg-primary/20 rounded-lg p-4 mb-6 border-2 border-dashed border-primary">
+                  <h2 className="text-3xl font-black text-card-foreground uppercase tracking-wide text-center">
+                    📤 Upload Zone! 📤
+                  </h2>
                 </div>
 
-                <div className="border-2 border-dashed border-white/30 rounded-xl p-8 text-center hover:border-primary/70 hover:bg-black/10 transition-all duration-300 bg-black/10 backdrop-blur-md shadow-inner">
+                <div className="border-4 border-dashed border-border rounded-xl p-8 text-center hover:border-primary hover:bg-primary/10 transition-all duration-300 paper-texture">
                   <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" id="file-upload" />
                   <label htmlFor="file-upload" className="cursor-pointer block">
                     {previewUrl ? (
                       <div className="space-y-4">
-                        <img
-                          src={previewUrl || "/placeholder.svg"}
-                          alt="Preview"
-                          className="max-w-full max-h-64 mx-auto rounded-lg shadow-2xl ring-2 ring-white/20 hover:ring-primary/50 transition-all duration-300"
-                        />
-                        <div className="bg-black/40 backdrop-blur-sm rounded px-3 py-1 inline-block">
-                          <p className="text-sm text-white drop-shadow-md">Click to change image</p>
+                        <div className="border-4 border-secondary rounded-xl p-2 bg-secondary/20">
+                          <img
+                            src={previewUrl || "/placeholder.svg"}
+                            alt="Preview"
+                            className="max-w-full max-h-64 mx-auto rounded-lg border-2 border-border"
+                          />
+                        </div>
+                        <div className="bg-card rounded-lg p-3 border-2 border-border">
+                          <p className="text-sm text-card-foreground font-bold">🔄 Click to change image</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <Upload className="mx-auto h-16 w-16 text-white/90 drop-shadow-lg" />
-                        <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 inline-block">
-                          <p className="text-lg font-medium text-white drop-shadow-md">Drop your image here</p>
-                          <p className="text-sm text-white/90 drop-shadow-md">or click to browse</p>
+                        <div className="animate-float">
+                          <Upload className="mx-auto h-20 w-20 text-primary" />
+                        </div>
+                        <div className="bg-card rounded-lg p-4 border-2 border-border">
+                          <p className="text-xl font-black text-card-foreground">🎪 Drop your image here! 🎪</p>
+                          <p className="text-sm text-muted-foreground mt-2">or click to browse your files</p>
                         </div>
                       </div>
                     )}
@@ -154,72 +164,76 @@ export default function HomePage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={!selectedFile || isGenerating}
-                  className="w-full mt-6 h-12 text-lg bg-primary/90 hover:bg-primary backdrop-blur-sm text-white shadow-2xl hover:shadow-primary/25 hover:scale-[1.02] transition-all duration-300 border border-primary/30"
+                  className="w-full mt-6 south-park-button text-primary-foreground text-xl py-6"
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Generating...
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />🎭 Making Magic...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Generate AI Image
+                      <Sparkles className="mr-2 h-6 w-6" />🚀 Create Awesome Art!
                     </>
                   )}
                 </Button>
 
                 {error && (
-                  <div className="mt-4 p-3 bg-red-900/40 backdrop-blur-md border border-red-400/30 rounded-lg shadow-lg">
-                    <p className="text-red-100 text-sm drop-shadow-md">{error}</p>
+                  <div className="mt-4 p-4 bg-destructive/20 border-2 border-destructive rounded-lg">
+                    <p className="text-destructive font-bold text-center">⚠️ {error}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Output Area */}
-            <Card className="bg-black/20 backdrop-blur-xl border-white/20 shadow-2xl hover:bg-black/25 transition-all duration-300">
+            <Card className="south-park-card paper-texture">
               <CardContent className="p-8">
-                <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4 mb-6">
-                  <h2 className="text-2xl font-semibold text-white drop-shadow-lg">Generated Result</h2>
+                <div className="bg-accent/20 rounded-lg p-4 mb-6 border-2 border-dashed border-accent">
+                  <h2 className="text-3xl font-black text-card-foreground uppercase tracking-wide text-center">
+                    🎨 Your Masterpiece! 🎨
+                  </h2>
                 </div>
 
-                <div className="border-2 border-dashed border-white/30 rounded-xl p-8 min-h-[400px] flex items-center justify-center bg-black/10 backdrop-blur-md shadow-inner">
+                <div className="border-4 border-dashed border-border rounded-xl p-8 min-h-[400px] flex items-center justify-center paper-texture">
                   {isGenerating ? (
                     <div className="text-center space-y-4">
-                      <Loader2 className="mx-auto h-16 w-16 animate-spin text-primary drop-shadow-lg" />
-                      <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4">
-                        <p className="text-lg font-medium text-white drop-shadow-md">Creating magic...</p>
-                        <p className="text-sm text-white/90 drop-shadow-md">This may take a few moments</p>
+                      <Loader2 className="mx-auto h-20 w-20 animate-spin text-primary" />
+                      <div className="bg-card rounded-lg p-4 border-2 border-border">
+                        <p className="text-xl font-black text-card-foreground">🎪 Creating your masterpiece...</p>
+                        <p className="text-sm text-muted-foreground mt-2">This might take a few moments!</p>
                       </div>
                     </div>
                   ) : generatedImage ? (
-                    <div className="space-y-4 w-full">
-                      <img
-                        src={generatedImage || "/placeholder.svg"}
-                        alt="Generated"
-                        className="max-w-full max-h-full mx-auto rounded-lg shadow-2xl ring-2 ring-white/20 hover:ring-primary/50 transition-all duration-300"
-                      />
+                    <div className="space-y-4 w-full animate-fade-in-up">
+                      <div className="border-4 border-accent rounded-xl p-2 bg-accent/20">
+                        <img
+                          src={generatedImage || "/placeholder.svg"}
+                          alt="Generated"
+                          className="max-w-full max-h-full mx-auto rounded-lg border-2 border-border"
+                        />
+                      </div>
                       <div className="text-center">
                         <Button
                           onClick={() => {
                             const link = document.createElement("a")
                             link.href = generatedImage
-                            link.download = "generated-image.jpg"
+                            link.download = "south-park-masterpiece.jpg"
                             link.click()
                           }}
-                          variant="outline"
-                          className="border-white/30 text-white hover:bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                          className="south-park-button text-primary-foreground"
                         >
-                          Download Image
+                          💾 Download Your Art!
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center space-y-2">
-                      <Sparkles className="mx-auto h-12 w-12 text-white/70 drop-shadow-lg" />
-                      <div className="bg-black/40 backdrop-blur-sm rounded px-4 py-2 inline-block">
-                        <p className="text-white drop-shadow-md">Your generated image will appear here</p>
+                    <div className="text-center space-y-4 animate-float">
+                      <div className="w-24 h-24 bg-accent/30 rounded-xl flex items-center justify-center mx-auto border-3 border-accent">
+                        <Sparkles className="h-12 w-12 text-accent" />
+                      </div>
+                      <div className="bg-card rounded-lg p-4 border-2 border-border">
+                        <p className="text-card-foreground font-bold text-lg">
+                          🎪 Your awesome creation will appear here!
+                        </p>
                       </div>
                     </div>
                   )}
@@ -229,14 +243,15 @@ export default function HomePage() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="text-center py-8 border-t border-white/20 bg-black/20 backdrop-blur-sm">
-          <p className="text-sm text-white/80">
-            Powered by AI •{" "}
-            <a href="/simple" className="text-primary hover:underline">
-              Debug Mode
-            </a>
-          </p>
+        <footer className="text-center py-8 border-t-4 border-secondary bg-secondary/20 backdrop-blur-sm">
+          <div className="bg-card rounded-lg p-3 border-2 border-border max-w-md mx-auto">
+            <p className="text-sm text-card-foreground font-bold">
+              🎨 Powered by AI Magic •{" "}
+              <a href="/simple" className="text-primary hover:text-accent hover:underline font-black">
+                🔧 Debug Mode
+              </a>
+            </p>
+          </div>
         </footer>
       </div>
     </div>
