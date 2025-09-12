@@ -3,8 +3,65 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Upload, Loader2, Sparkles, ChevronDown, Play, Pause } from "lucide-react"
+
+const Upload = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+    />
+  </svg>
+)
+
+const Loader2 = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+    />
+  </svg>
+)
+
+const Sparkles = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 3l1.5 1.5L5 6l-1.5-1.5L5 3zM19 3l1.5 1.5L19 6l-1.5-1.5L19 3zM12 8l1.5 1.5L12 11l-1.5-1.5L12 8zM5 21l1.5-1.5L5 18l-1.5 1.5L5 21zM19 21l1.5-1.5L19 18l-1.5 1.5L19 21z"
+    />
+  </svg>
+)
+
+const ChevronDown = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+)
+
+const Play = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+)
+
+const Pause = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+  </svg>
+)
+
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={className}>{children}</div>
+)
+
+const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={className}>{children}</div>
+)
 
 const SimpleButton = ({
   children,
@@ -87,7 +144,7 @@ export default function HomePage() {
       const prompt = analyzeData.prompt
 
       if (!prompt) {
-        throw new Error("无法生成描述")
+        throw new Error("Failed to generate description")
       }
 
       const generateForm = new FormData()
@@ -100,7 +157,7 @@ export default function HomePage() {
       })
 
       if (!generateResponse.ok) {
-        throw new Error("图片生成失败")
+        throw new Error("Image generation failed")
       }
 
       const generateData = await generateResponse.json()
@@ -112,11 +169,11 @@ export default function HomePage() {
       if (generateData.imageUrl) {
         setGeneratedImage(generateData.imageUrl)
       } else {
-        throw new Error("未能生成图片")
+        throw new Error("No image was generated")
       }
     } catch (error) {
       console.error("Generation failed:", error)
-      setError(error instanceof Error ? error.message : "生成失败")
+      setError(error instanceof Error ? error.message : "Generation failed")
     } finally {
       setIsGenerating(false)
     }
@@ -157,6 +214,20 @@ export default function HomePage() {
         <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/We%20were%20sittin_%20in%20class_%20watchin_%20Fox%20a-Fl77ZbUMdpw7zahKjYzBS8bBZ26YvS.mp3" type="audio/mpeg" />
       </audio>
 
+      <div className="fixed top-4 right-4 z-30">
+        <SimpleButton onClick={toggleAudio} className="text-sm px-4 py-2">
+          {isPlaying ? (
+            <>
+              <Pause className="mr-1 h-4 w-4" />Music Off
+            </>
+          ) : (
+            <>
+              <Play className="mr-1 h-4 w-4" />Music On
+            </>
+          )}
+        </SimpleButton>
+      </div>
+
       <div className="relative z-20">
         <section className="min-h-screen flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl mx-auto">
@@ -164,24 +235,12 @@ export default function HomePage() {
               $SPVERSE
             </h1>
             <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-yellow-400 drop-shadow-lg uppercase tracking-wide mb-12">
-              JOIN THE SOUTHPARK UNIVERSE
+              Join the South Park Universe
             </h2>
-            <div className="mb-8">
-              <SimpleButton onClick={toggleAudio} className="text-xl px-8 py-4 mb-6">
-                {isPlaying ? (
-                  <>
-                    <Pause className="mr-2 h-6 w-6" />🎵 Pause Theme
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-6 w-6" />🎵 Play Theme
-                  </>
-                )}
-              </SimpleButton>
-            </div>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <SimpleButton className="text-xl px-8 py-4">🐦 Follow X</SimpleButton>
-              <SimpleButton className="text-xl px-8 py-4">🏠 Join Community</SimpleButton>
+              <SimpleButton className="text-xl px-8 py-4">Follow X</SimpleButton>
+              <SimpleButton className="text-xl px-8 py-4">Join Community</SimpleButton>
+              <SimpleButton className="text-xl px-8 py-4">Open Chart</SimpleButton>
             </div>
           </div>
 
@@ -201,7 +260,7 @@ export default function HomePage() {
                 <Sparkles className="h-10 w-10 text-yellow-400" />
               </div>
               <h1 className="text-5xl md:text-6xl font-black text-white drop-shadow-lg uppercase tracking-wide">
-                🎨 Oh My God! AI Art Factory! 🎨
+                Oh My God! You Are In the Universe!
               </h1>
               <div className="animate-bounce" style={{ animationDelay: "0.5s" }}>
                 <Sparkles className="h-10 w-10 text-yellow-400" />
@@ -209,7 +268,7 @@ export default function HomePage() {
             </div>
             <div className="bg-black/80 backdrop-blur-md rounded-xl p-4 max-w-3xl mx-auto border-3 border-yellow-400">
               <p className="text-xl text-white font-bold drop-shadow-lg shadow-black/50">
-                🚀 Sweet! Turn your lame photos into EPIC South Park masterpieces! No more boring selfies, mkay? 🚀
+                Turn your photos into EPIC South Park masterpieces! No more waiting.
               </p>
             </div>
           </header>
@@ -220,7 +279,7 @@ export default function HomePage() {
                 <CardContent className="p-4 sm:p-6 lg:p-8">
                   <div className="bg-yellow-400/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
                     <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wide text-center">
-                      📤 Respect My Upload Zone! 📤
+                      Respect My Upload Zone
                     </h2>
                   </div>
 
@@ -244,7 +303,7 @@ export default function HomePage() {
                           </div>
                           <div className="bg-white rounded-lg p-2 sm:p-3 border-2 border-white">
                             <p className="text-xs sm:text-sm text-black font-bold">
-                              🔄 Screw this pic, upload another one!
+                              Replace this image, upload another one
                             </p>
                           </div>
                         </div>
@@ -255,10 +314,10 @@ export default function HomePage() {
                           </div>
                           <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
                             <p className="text-lg sm:text-xl font-black text-black">
-                              🎪 Dude! Drop your crappy photo here! 🎪
+                              Drop your photo here
                             </p>
                             <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                              or click to find that perfect pic, you guys!
+                              or click to select an image
                             </p>
                           </div>
                         </div>
@@ -273,19 +332,18 @@ export default function HomePage() {
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 sm:h-6 sm:w-6 animate-spin" />🎭 Oh snap! Making magic
-                        happen...
+                        <Loader2 className="mr-2 h-5 w-5 sm:h-6 sm:w-6 animate-spin" />Generating...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />🚀 Make Me Look AWESOME!
+                        <Sparkles className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />Generate AI Image
                       </>
                     )}
                   </SimpleButton>
 
                   {error && (
                     <div className="mt-4 p-3 sm:p-4 bg-red-500/20 border-2 border-red-500 rounded-lg">
-                      <p className="text-red-500 font-bold text-center text-sm sm:text-base">⚠️ {error}</p>
+                      <p className="text-red-500 font-bold text-center text-sm sm:text-base">Error: {error}</p>
                     </div>
                   )}
                 </CardContent>
@@ -295,7 +353,7 @@ export default function HomePage() {
                 <CardContent className="p-4 sm:p-6 lg:p-8">
                   <div className="bg-yellow-400/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
                     <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wide text-center">
-                      🎨 Holy Crap! Your Masterpiece! 🎨
+                      Your Masterpiece
                     </h2>
                   </div>
 
@@ -305,10 +363,10 @@ export default function HomePage() {
                         <Loader2 className="mx-auto h-16 w-16 sm:h-20 sm:w-20 animate-spin text-yellow-400" />
                         <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
                           <p className="text-lg sm:text-xl font-black text-black">
-                            🎪 Kenny's working on your masterpiece...
+                            Generating your masterpiece...
                           </p>
                           <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                            Don't kill Kenny while we work our magic!
+                            Please wait while we work on your art.
                           </p>
                         </div>
                       </div>
@@ -331,7 +389,7 @@ export default function HomePage() {
                             }}
                             className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
                           >
-                            💾 Sweet! Download This Epic Art!
+                            Download Image
                           </SimpleButton>
                         </div>
                       </div>
@@ -342,7 +400,7 @@ export default function HomePage() {
                         </div>
                         <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
                           <p className="text-black font-bold text-base sm:text-lg">
-                            🎪 Dude! Your totally awesome creation will show up here!
+                            Your generated image will appear here
                           </p>
                         </div>
                       </div>
@@ -355,7 +413,7 @@ export default function HomePage() {
 
           <footer className="text-center py-8 border-t-4 border-yellow-400 bg-yellow-400/20 backdrop-blur-sm">
             <div className="bg-white rounded-lg p-3 border-2 border-white max-w-md mx-auto">
-              <p className="text-sm text-black font-bold">🎭 Powered by AI Magic (and lots of Cheesy Poofs)</p>
+              <p className="text-sm text-black font-bold">Powered by South Park Universe Team (and lots of Cheesy Poofs)</p>
             </div>
           </footer>
         </section>
