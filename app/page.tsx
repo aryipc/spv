@@ -218,11 +218,13 @@ export default function HomePage() {
         <SimpleButton onClick={toggleAudio} className="text-sm px-4 py-2">
           {isPlaying ? (
             <>
-              <Pause className="mr-1 h-4 w-4" />Music Off
+              <Pause className="mr-1 h-4 w-4" />
+              Music Off
             </>
           ) : (
             <>
-              <Play className="mr-1 h-4 w-4" />Music On
+              <Play className="mr-1 h-4 w-4" />
+              Music On
             </>
           )}
         </SimpleButton>
@@ -277,7 +279,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <Card className="bg-black/80 backdrop-blur-md rounded-xl border-3 border-yellow-400">
                 <CardContent className="p-4 sm:p-6 lg:p-8">
-                  <div className="bg-yellow-400/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
+                  <div className="bg-black/80 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
                     <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wide text-center">
                       Respect My Upload Zone
                     </h2>
@@ -294,7 +296,7 @@ export default function HomePage() {
                     <label htmlFor="file-upload" className="cursor-pointer block">
                       {previewUrl ? (
                         <div className="space-y-3 sm:space-y-4">
-                          <div className="border-4 border-yellow-400 rounded-xl p-2 bg-yellow-400/20">
+                          <div className="border-4 border-yellow-400 rounded-xl p-2 bg-black/80">
                             <img
                               src={previewUrl || "/placeholder.svg"}
                               alt="Preview"
@@ -313,12 +315,8 @@ export default function HomePage() {
                             <Upload className="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-yellow-400" />
                           </div>
                           <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
-                            <p className="text-lg sm:text-xl font-black text-black">
-                              Drop your photo here
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                              or click to select an image
-                            </p>
+                            <p className="text-lg sm:text-xl font-black text-black">Drop your photo here</p>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-2">or click to select an image</p>
                           </div>
                         </div>
                       )}
@@ -332,11 +330,13 @@ export default function HomePage() {
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 sm:h-6 sm:w-6 animate-spin" />Generating...
+                        <Loader2 className="mr-2 h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
+                        Generating...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />Generate AI Image
+                        <Sparkles className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                        Generate Image
                       </>
                     )}
                   </SimpleButton>
@@ -351,7 +351,7 @@ export default function HomePage() {
 
               <Card className="bg-black/80 backdrop-blur-md rounded-xl border-3 border-yellow-400">
                 <CardContent className="p-4 sm:p-6 lg:p-8">
-                  <div className="bg-yellow-400/20 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
+                  <div className="bg-black/80 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-dashed border-yellow-400">
                     <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wide text-center">
                       Your Masterpiece
                     </h2>
@@ -362,9 +362,7 @@ export default function HomePage() {
                       <div className="text-center space-y-3 sm:space-y-4">
                         <Loader2 className="mx-auto h-16 w-16 sm:h-20 sm:w-20 animate-spin text-yellow-400" />
                         <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
-                          <p className="text-lg sm:text-xl font-black text-black">
-                            Generating your masterpiece...
-                          </p>
+                          <p className="text-lg sm:text-xl font-black text-black">Generating your masterpiece...</p>
                           <p className="text-xs sm:text-sm text-gray-500 mt-2">
                             Please wait while we work on your art.
                           </p>
@@ -372,7 +370,7 @@ export default function HomePage() {
                       </div>
                     ) : generatedImage ? (
                       <div className="space-y-3 sm:space-y-4 w-full animate-fade-in-up">
-                        <div className="border-4 border-yellow-400 rounded-xl p-2 bg-yellow-400/20">
+                        <div className="border-4 border-yellow-400 rounded-xl p-2 bg-black/80">
                           <img
                             src={generatedImage || "/placeholder.svg"}
                             alt="Generated"
@@ -395,7 +393,7 @@ export default function HomePage() {
                       </div>
                     ) : (
                       <div className="text-center space-y-3 sm:space-y-4 animate-bounce">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-yellow-400/30 rounded-xl flex items-center justify-center mx-auto border-3 border-yellow-400">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-black/80 rounded-xl flex items-center justify-center mx-auto border-3 border-yellow-400">
                           <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400" />
                         </div>
                         <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-white">
@@ -413,7 +411,9 @@ export default function HomePage() {
 
           <footer className="text-center py-8 border-t-4 border-yellow-400 bg-yellow-400/20 backdrop-blur-sm">
             <div className="bg-white rounded-lg p-3 border-2 border-white max-w-md mx-auto">
-              <p className="text-sm text-black font-bold">Powered by South Park Universe Team (and lots of Cheesy Poofs)</p>
+              <p className="text-sm text-black font-bold">
+                Powered by South Park Universe Team (and lots of Cheesy Poofs)
+              </p>
             </div>
           </footer>
         </section>
