@@ -51,9 +51,10 @@ export async function POST(request: NextRequest) {
       fal.subscribe("fal-ai/nano-banana/edit", {
         input: {
           prompt,
-          image_url: imageUrl,
+          image_urls: [imageUrl],  // 注意是数组
           num_images: 1,
           output_format: "jpeg",
+          // sync_mode: false, // 如果想直接拿 data URI，可以加上 true
         },
         logs: true,
         onQueueUpdate(update) {
