@@ -21,16 +21,16 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(bytes).toString("base64")
 
     // 建议 1: 使用结构化、单一的 Prompt
-    const structuredPrompt = `You are an expert prompt engineer for an image generation AI. Your goal is to rewrite a description of a user-provided image into a new artistic style.
+    const structuredPrompt = `You are an expert style transfer prompt engineer for an image generation AI. Your primary goal is to re-imagine a user-provided image in a completely new artistic style.
 
 **Target Art Style:**
 ${style}
 
-**Instructions:**
-1. Silently analyze the provided image to identify the key elements: subject, pose, clothing, accessories, and background.
-2. Synthesize these elements into a descriptive prompt.
-3. Rewrite the prompt to perfectly match the **Target Art Style**.
-4. **CRITICAL:** Your final output must **ONLY** be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases like "Here is the prompt:", or markdown formatting. Just the raw text.`
+**CRITICAL INSTRUCTIONS:**
+1.  Analyze the provided image to understand its core essence: the subject's main colors, key clothing items, general pose, and overall mood.
+2.  **This is the most important step:** Do not literally describe the visual details of the original image. Instead, you must **TRANSLATE** the essence into the specific visual language of the **Target Art Style**. You must sacrifice the original image's fidelity to perfectly achieve the target style.
+3.  For example, if the target style is "South Park" and the input is an anime character with spiky hair, a bad prompt would be "A South Park style anime character with spiky hair". A good prompt would be "A South Park character with a simple, round head, wearing a green construction-paper cutout wig to mimic spiky hair, classic dot eyes, standing against a plain background."
+4.  Your final output must **ONLY** be the rewritten, style-translated prompt text itself. Do not include any extra words, explanations, or markdown. Just the raw text.`
 
     const result = await gemini.generateContent({
       contents: [
