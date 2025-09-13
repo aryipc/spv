@@ -7,7 +7,7 @@ fal.config({
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("[v0] Starting image generation")
+    console.log("[v0] Starting nano-banana edit")
     const formData = await request.formData()
     const file = formData.get("image") as File | null
     const prompt = formData.get("prompt") as string
@@ -45,18 +45,15 @@ export async function POST(request: NextRequest) {
 
     const logs: string[] = []
 
-    console.log("[v0] Starting fal-ai generation")
+    console.log("[v0] Starting fal-ai generation with nano-banana/edit")
 
     const result = await Promise.race([
-      fal.subscribe("fal-ai/flux-pro/kontext", {
+      fal.subscribe("fal-ai/nano-banana/edit", {
         input: {
           prompt,
           image_url: imageUrl,
-          aspect_ratio: "1:1",
-          guidance_scale: 3.5,
           num_images: 1,
           output_format: "jpeg",
-          safety_tolerance: "2",
         },
         logs: true,
         onQueueUpdate(update) {
@@ -102,7 +99,8 @@ export async function POST(request: NextRequest) {
       generatedImageUrl = resultData.images[0].url || resultData.images[0]
     } else if (resultData.image) {
       console.log("[v0] Found image field:", typeof resultData.image)
-      generatedImageUrl = typeof resultData.image === "string" ? resultData.image : resultData.image.url
+      generatedImageUrl =
+        typeof resultData.image === "string" ? resultData.image : resultData.image.url
     } else if (resultData.url) {
       console.log("[v0] Found url field:", resultData.url)
       generatedImageUrl = resultData.url
