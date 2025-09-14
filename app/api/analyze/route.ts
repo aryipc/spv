@@ -8,9 +8,6 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("image") as File | null;
-    
-    // The 'style' variable is not used in the prompt, which is fine as the prompt is hardcoded for South Park.
-    // If you wanted to make it dynamic, you'd insert the `style` variable into the structuredPrompt.
 
     if (!file) {
       return NextResponse.json({ error: "Image is required" }, { status: 400 });
@@ -19,36 +16,25 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
 
-    // --- REVISED PROMPT TEMPLATE ---
-    // This new prompt instructs Gemini to create a concise, keyword-focused prompt
-    // that is much more effective for image generation models.
-    const structuredPrompt = `You are an expert prompt engineer for AI image generators like Stable Diffusion. Your task is to analyze a user's image and convert it into a concise, direct, and keyword-heavy prompt that captures the essence of the image in the South Park art style.
-
-    TARGET STYLE CHARACTERISTICS:
-    - Art Style: South Park cartoon style
-    - Shapes: Simple, blocky, geometric characters.
-    - Outlines: Thick, distinct black outlines on everything.
-    - Colors: Flat, solid, often primary colors. No gradients or complex shading.
-    - Expressions: Exaggerated or deadpan (annoyed, shocked, blank).
-    - Backgrounds: Very simple, minimalist, flat colored planes.
+    // --- V4 PROMPT TEMPLATE ---
+    // Change: Removed the abstract "Vibe" and "Tone" sections from the static style guide
+    // to focus purely on concrete visual instructions.
+    const structuredPrompt = `You are an AI prompt generation assistant. Your task is to combine a detailed description of a user's image with a fixed, specific style guide.
 
     INSTRUCTIONS:
-    1.  Analyze the provided image to identify the main subject(s), action, setting, and mood.
-    2.  Convert your analysis into a comma-separated list of keywords and short phrases.
-    3.  CRITICAL: Always start the prompt with "South Park style," to give it maximum weight.
-    4.  Simplify all descriptions. Instead of "a man wearing a tan sheriff's uniform," use "South Park sheriff character." Instead of "men in dark suits," use "blocky government agents."
-    5.  Explicitly include keywords from the style characteristics, like "thick outlines," "flat colors," "simple background."
-    6.  AVOID long, descriptive sentences. Think in terms of tags or keywords.
+    1.  First, silently analyze the user-provided image and write a descriptive but concise summary. Capture the key subjects, their appearance (like specific clothing, colors, or notable features), their main action, and the immediate environment. Aim for a detailed sentence or 2-3 key phrases.
+    2.  Next, append the following detailed style guide, exactly as written, after your description. The separator between your description and the guide must be " • ".
+    
+    THE FIXED STYLE GUIDE (Append this part verbatim):
+    Transform the subject into South Park cartoon style. • Character design: flat 2D cutout look, simple round head, large circular eyes with black pupils, tiny oval mouth. • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: short, chubby body, stubby arms and legs, mitten-shaped hands. • Clothing: plain blocky outfits--sweaters, jackets, pants, boots, iconic hats or hoods.
 
     CRITICAL FINAL OUTPUT FORMAT:
-    - Your entire output MUST only be the raw prompt text.
-    - Do not include explanations, introductions like "Here is your prompt:", or markdown.
-    - The output must be a single line of comma-separated text.
+    - Your output must be a single line of text.
+    - It must start with your generated description, followed by " • ", followed by the entire fixed style guide.
+    - Do not add any other text, explanations, or formatting.
 
-    GOOD EXAMPLE OUTPUTS (based on different images):
-    - South Park style, 4 kids at a bus stop, snowy day, simple background, thick outlines, flat colors.
-    - South Park style, Cartman character sitting on a couch, angry expression, messy living room, thick outlines.
-    - South Park style, blocky character in a lab coat, holding a beaker, simple laboratory background, flat colors.
+    EXAMPLE OUTPUT (for the provided image):
+    Four men at a press conference: a politician in a dark suit and patterned tie speaks at a wooden podium, flanked by two men in dark suits and a sheriff in a tan uniform with a cowboy hat. The background shows simple blue and yellow flags. • Transform the subject into South Park cartoon style. • Character design: flat 2D cutout look, simple round head, large circular eyes with black pupils, tiny oval mouth. • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: short, chubby body, stubby arms and legs, mitten-shaped hands. • Clothing: plain blocky outfits--sweaters, jackets, pants, boots, iconic hats or hoods.
     `;
 
     const result = await gemini.generateContent({
@@ -60,13 +46,13 @@ export async function POST(req: NextRequest) {
               inlineData: { mimeType: file.type, data: base64 },
             },
             {
-              text: structuredPrompt, // Using the new, improved prompt
+              text: structuredPrompt,
             },
           ],
         },
       ],
     }, {
-      temperature: 0.2, // Low temperature is good for consistency
+      temperature: 0.1, 
     });
 
     const prompt = result.response.text();
