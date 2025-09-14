@@ -1,55 +1,56 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-// 建议 2: 使用更稳定的模型
-const gemini = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
+import { type NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const gemini = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData()
-    const file = formData.get("image") as File | null
-    const style =
-      (formData.get("style") as string) ||
-      "South Park cartoon style, flat colors, simple shapes, exaggerated expressions"
-    // code
-    // Code
+    const formData = await req.formData();
+    const file = formData.get("image") as File | null;
+    
+    // The 'style' variable is not used in the prompt, which is fine as the prompt is hardcoded for South Park.
+    // If you wanted to make it dynamic, you'd insert the `style` variable into the structuredPrompt.
+
     if (!file) {
-      return NextResponse.json({ error: "Image is required" }, { status: 400 })
+      return NextResponse.json({ error: "Image is required" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer()
-    const base64 = Buffer.from(bytes).toString("base64")
+    const bytes = await file.arrayBuffer();
+    const base64 = Buffer.from(bytes).toString("base64");
 
-    // 建议 1: 使用结构化、单一的 Prompt
-    const structuredPrompt = `You are an expert prompt engineer for an image generation AI, specializing in recreating the distinctive visual and character style of South Park. Your goal is to rewrite a detailed description of a user-provided image into a prompt that perfectly captures the South Park aesthetic.
+    // --- REVISED PROMPT TEMPLATE ---
+    // This new prompt instructs Gemini to create a concise, keyword-focused prompt
+    // that is much more effective for image generation models.
+    const structuredPrompt = `You are an expert prompt engineer for AI image generators like Stable Diffusion. Your task is to analyze a user's image and convert it into a concise, direct, and keyword-heavy prompt that captures the essence of the image in the South Park art style.
 
-Target Art Style: South Park cartoon style. This means:
-- **Characters:** Blocky, simple shapes. Round heads, large eyes with small pupils, often exaggerated or deadpan expressions. Distinctive hats (like Cartman's red hat or Stan's blue hat) are common. Limited, simplified body movements.
-- **Colors:** Flat, solid colors. No complex gradients or textures.
-- **Lines:** Thick, black outlines for all elements.
-- **Backgrounds:** Extremely simplistic, often abstract or symbolic representations of locations. Flat color backgrounds are common. Minimal details.
-- **Overall Tone:** Can often be slightly crude, absurd, or satirically mundane, even if the image itself is not.
+    TARGET STYLE CHARACTERISTICS:
+    - Art Style: South Park cartoon style
+    - Shapes: Simple, blocky, geometric characters.
+    - Outlines: Thick, distinct black outlines on everything.
+    - Colors: Flat, solid, often primary colors. No gradients or complex shading.
+    - Expressions: Exaggerated or deadpan (annoyed, shocked, blank).
+    - Backgrounds: Very simple, minimalist, flat colored planes.
 
-Instructions:
-1. **Detailed Analysis:** Silently analyze the provided image with extreme detail. Identify every key element:
-    - **Subject(s):** Who or what are the main figures?
-    - **Pose/Action:** What are they doing? How are they positioned? (e.g., "standing with hands in pockets," "shouting furiously," "looking bored")
-    - **Facial Expression:** Specifically note the emotional state. (e.g., "annoyed," "shocked," "blank stare," "grinning mischievously")
-    - **Clothing/Accessories:** Describe specific items and colors. (e.g., "a red winter jacket," "a green knitted hat," "oversized yellow gloves," "a backpack")
-    - **Background/Environment:** What is the setting? Be very specific but also ready to simplify for South Park. (e.g., "a snowy street," "a classroom," "a dark alley," "a mountain landscape")
-    - **Objects/Props:** Are there any significant items they are holding or interacting with?
-2. **South Park Transformation:** Now, transform this detailed analysis into a prompt that inherently understands and applies the South Park visual language.
-    - **Simplify and Stylize:** Convert all shapes and details to their blocky, flat South Park equivalents.
-    - **Exaggerate:** If applicable, slightly exaggerate expressions or postures in a South Park manner.
-    - **Outline:** Ensure the prompt implies thick black outlines.
-    - **Color Palette:** Focus on flat, primary-like colors where appropriate.
-    - **Contextualization:** If the image implies a certain mood or scenario, briefly hint at that within the South Park context.
-3. **CRITICAL: Final Output Format:** Your final output must ONLY be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases like "Here is the prompt:", or markdown formatting. Just the raw text.
+    INSTRUCTIONS:
+    1.  Analyze the provided image to identify the main subject(s), action, setting, and mood.
+    2.  Convert your analysis into a comma-separated list of keywords and short phrases.
+    3.  CRITICAL: Always start the prompt with "South Park style," to give it maximum weight.
+    4.  Simplify all descriptions. Instead of "a man wearing a tan sheriff's uniform," use "South Park sheriff character." Instead of "men in dark suits," use "blocky government agents."
+    5.  Explicitly include keywords from the style characteristics, like "thick outlines," "flat colors," "simple background."
+    6.  AVOID long, descriptive sentences. Think in terms of tags or keywords.
 
-Example of what the output should look like (but dynamically generated based on the image):
-"Cartman standing with hands in his red jacket pockets, an angry expression on his face, snow falling, in South Park style"
-or
-"A character resembling Stan Marsh, wearing a blue hat and red jacket, with a neutral expression, sitting at a school desk, in the iconic South Park animation style"
-`
+    CRITICAL FINAL OUTPUT FORMAT:
+    - Your entire output MUST only be the raw prompt text.
+    - Do not include explanations, introductions like "Here is your prompt:", or markdown.
+    - The output must be a single line of comma-separated text.
+
+    GOOD EXAMPLE OUTPUTS (based on different images):
+    - South Park style, 4 kids at a bus stop, snowy day, simple background, thick outlines, flat colors.
+    - South Park style, Cartman character sitting on a couch, angry expression, messy living room, thick outlines.
+    - South Park style, blocky character in a lab coat, holding a beaker, simple laboratory background, flat colors.
+    `;
+
     const result = await gemini.generateContent({
       contents: [
         {
@@ -59,19 +60,23 @@ or
               inlineData: { mimeType: file.type, data: base64 },
             },
             {
-              text: structuredPrompt, // 使用新的 Prompt
+              text: structuredPrompt, // Using the new, improved prompt
             },
           ],
         },
       ],
     }, {
-      // 建议 3: 添加生成配置以降低随机性
-      temperature: 0.2,
-    })
-    const prompt = result.response.text()
-    return NextResponse.json({ prompt })
+      temperature: 0.2, // Low temperature is good for consistency
+    });
+
+    const prompt = result.response.text();
+
+    return NextResponse.json({ prompt });
   } catch (err: any) {
-    console.error("Gemini error:", err)
-    return NextResponse.json({ error: err.message || "Failed to analyze" }, { status: 500 })
+    console.error("Gemini error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to analyze" },
+      { status: 500 }
+    );
   }
 }
