@@ -16,11 +16,7 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
 
-    // --- V6 PROMPT TEMPLATE (Flexible Version) ---
-    // Change: Made the static style guide more flexible based on user feedback.
-    // 1. Removed the hardcoded "Clothing" section.
-    // 2. Generalized "head shape" to allow for more variety.
-    // 3. Generalized "body proportions" to fit different character types.
+    // V6 Prompt模板 (逻辑无误，无需改动)
     const structuredPrompt = `You are an AI prompt generation assistant. Your task is to combine a hyper-detailed description of a user's image with a flexible, core-principles style guide.
 
     INSTRUCTIONS:
@@ -42,7 +38,9 @@ export async function POST(req: NextRequest) {
     A central figure with dark hair, wearing a dark navy suit and a black and white patterned tie, speaks with a serious expression from behind a wooden podium that has a golden circular seal. To his right stands a man with short brown hair in a dark suit and gold tie, with a neutral expression, hands clasped. To the speaker's left is a bald man in a dark suit and red tie, looking forward sternly. Furthest to the right, a sheriff in a tan uniform and a dark cowboy hat stands with his arms crossed. The background is composed of large, simple royal blue and yellow flags. • Transform the subject into South Park cartoon style. • Character design: simple geometric head shapes, large circular eyes with black pupils, tiny oval mouth. • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: simplistic and blocky bodies, often with short limbs and mitten-shaped hands.
     `;
 
-    const result = await genAI.generateContent({
+    // --- 这里是修正的部分 ---
+    // generateContent只接受一个参数。所有配置项都需放在这个对象内部。
+    const result = await gemini.generateContent({
       contents: [
         {
           role: "user",
@@ -56,8 +54,10 @@ export async function POST(req: NextRequest) {
           ],
         },
       ],
-    }, {
-      temperature: 0.1, 
+      // CORRECT: 'generationConfig' is a property inside the single request object.
+      generationConfig: {
+        temperature: 0.1,
+      },
     });
 
     const prompt = result.response.text();
@@ -65,6 +65,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ prompt });
   } catch (err: any) {
     console.error("Gemini error:", err);
+    // 增加对错误类型的判断，提供更具体的错误信息
+    if (err.message && err.message.includes('is not a function')) {
+        return NextResponse.json(
+            { error: "Internal server error: A library function was called incorrectly." },
+            { status: 500 }
+        );
+    }
     return NextResponse.json(
       { error: err.message || "Failed to analyze" },
       { status: 500 }
