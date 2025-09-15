@@ -1,127 +1,85 @@
-import { type NextRequest, NextResponse } from "next/server"
-import * as fal from "@fal-ai/serverless-client"
+import { type NextRequest, NextResponse } from "next/server";
+import * as fal from "@fal-ai/serverless-client";
 
+// Configure the fal-ai client with your credentials
 fal.config({
   credentials: process.env.FAL_KEY,
-})
+});
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("[v0] Starting nano-banana edit")
-    const formData = await request.formData()
-    const file = formData.get("image") as File | null
-    const prompt = formData.get("prompt") as string
+    console.log("[v1] Starting imagen4 generation");
+    const formData = await request.formData();
+    
+    // REMOVED: No longer need to get an image file
+    // const file = formData.get("image") as File | null
 
-    console.log("[v0] File received:", !!file, "Prompt received:", !!prompt)
-    console.log("[v0] Prompt content:", prompt)
+    // Get the prompt and the desired model tier from the form data
+    const prompt = formData.get("prompt") as string;
+    const model = (formData.get("model") as string) || "Imagen 4"; // Default to standard model
 
-    if (!file) {
-      return NextResponse.json({ error: "Image file is required" }, { status: 400 })
-    }
+    console.log("[v1] Prompt received:", !!prompt, "Model selected:", model);
+    console.log("[v1] Prompt content:", prompt);
+
+    // REMOVED: The check for a file is no longer necessary
+    // if (!file) { ... }
 
     if (!prompt || prompt.trim() === "") {
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    console.log("[v0] Uploading image to fal storage")
+    // REMOVED: The entire image upload block is gone as it's not needed for Text-to-Image
+    
+    const logs: string[] = [];
 
-    let imageUrl: string
-    try {
-      console.log("[v0] File size:", file.size, "bytes")
-      console.log("[v0] File type:", file.type)
-
-      imageUrl = await Promise.race([
-        fal.storage.upload(file),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000),
-        ),
-      ])
-
-      console.log("[v0] Image uploaded successfully:", imageUrl)
-    } catch (uploadError: any) {
-      console.error("[v0] Upload error:", uploadError)
-      throw new Error(`Failed to upload image: ${uploadError.message}`)
-    }
-
-    const logs: string[] = []
-
-    console.log("[v0] Starting fal-ai generation with nano-banana/edit")
+    console.log(`[v1] Starting fal-ai generation with imagen4/preview using model: ${model}`);
 
     const result = await Promise.race([
-      fal.subscribe("fal-ai/nano-banana/edit", {
+      fal.subscribe("fal-ai/imagen4/preview", {
         input: {
+          // UPDATED: Input now uses model_name and does not need image_urls
           prompt,
-          image_urls: [imageUrl],  // 注意是数组
+          model_name: model,
           num_images: 1,
           output_format: "jpeg",
-          // sync_mode: false, // 如果想直接拿 data URI，可以加上 true
         },
         logs: true,
         onQueueUpdate(update) {
-          console.log("[v0] Queue update:", update)
+          console.log("[v1] Queue update:", update);
           if (update.logs) {
             update.logs.forEach((l) => {
-              console.log("[v0] Log:", l.message)
-              logs.push(l.message)
-            })
+              console.log("[v1] Log:", l.message);
+              logs.push(l.message);
+            });
           }
         },
       }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000),
+        setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000)
       ),
-    ])
+    ]);
 
-    console.log("[v0] Full generation result:", JSON.stringify(result, null, 2))
+    console.log("[v1] Full generation result:", JSON.stringify(result, null, 2));
 
-    if (!result) {
-      console.log("[v0] Result is null or undefined")
-      throw new Error("No result returned from fal-ai")
+    if (!result || !result.images || result.images.length === 0) {
+      console.log("[v1] No result or empty images array returned from fal-ai");
+      throw new Error("No image generated. The result was empty.");
     }
 
-    console.log("[v0] Result keys:", Object.keys(result))
-    console.log("[v0] Result type:", typeof result)
+    // SIMPLIFIED: Newer models like Imagen 4 have a consistent response structure.
+    const generatedImageUrl = result.images[0]?.url;
 
-    let resultData = result.data || result
-
-    if (!resultData) {
-      console.log("[v0] No data field found, using entire result")
-      resultData = result
-    }
-
-    console.log("[v0] Result data:", JSON.stringify(resultData, null, 2))
-    console.log("[v0] Result data keys:", Object.keys(resultData))
-
-    // Check different possible response structures
-    let generatedImageUrl: string | undefined
-
-    if (resultData.images && Array.isArray(resultData.images) && resultData.images.length > 0) {
-      console.log("[v0] Found images array with", resultData.images.length, "items")
-      generatedImageUrl = resultData.images[0].url || resultData.images[0]
-    } else if (resultData.image) {
-      console.log("[v0] Found image field:", typeof resultData.image)
-      generatedImageUrl =
-        typeof resultData.image === "string" ? resultData.image : resultData.image.url
-    } else if (resultData.url) {
-      console.log("[v0] Found url field:", resultData.url)
-      generatedImageUrl = resultData.url
-    } else if (resultData.output && resultData.output.images) {
-      console.log("[v0] Found output.images field")
-      generatedImageUrl = resultData.output.images[0]?.url || resultData.output.images[0]
-    }
-
-    console.log("[v0] Extracted image URL:", generatedImageUrl)
+    console.log("[v1] Extracted image URL:", generatedImageUrl);
 
     if (!generatedImageUrl) {
-      console.log("[v0] No image URL found in any expected field")
-      console.log("[v0] Available fields:", Object.keys(resultData))
-      throw new Error(`No image generated. Full response: ${JSON.stringify(resultData, null, 2)}`)
+      console.log("[v1] No image URL found in the expected 'images' array field");
+      throw new Error(`No image URL found. Full response: ${JSON.stringify(result, null, 2)}`);
     }
 
-    console.log("[v0] Success! Generated image URL:", generatedImageUrl)
-    return NextResponse.json({ imageUrl: generatedImageUrl, logs })
+    console.log("[v1] Success! Generated image URL:", generatedImageUrl);
+    return NextResponse.json({ imageUrl: generatedImageUrl, logs });
   } catch (error: any) {
-    console.error("[v0] Error generating image:", error)
-    return NextResponse.json({ error: error.message || "Failed to generate image" }, { status: 500 })
+    console.error("[v1] Error generating image:", error);
+    return NextResponse.json({ error: error.message || "Failed to generate image" }, { status: 500 });
   }
 }
