@@ -238,7 +238,7 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/40 z-10"></div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} preload="auto">
-        <source src="/audio/southpark-theme.mp3" type="audio/mpeg" />
+        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/We%20were%20sittin_%20in%20class_%20watchin_%20Fox%20a-Fl77ZbUMdpw7zahKjYzBS8bBZ26YvS.mp3" type="audio/mpeg" />
       </audio>
 
       <div className="fixed top-4 right-4 z-30">
