@@ -205,13 +205,13 @@ export default function HomePage() {
         className="fixed inset-0 w-full h-full object-cover z-0"
         style={{ minWidth: "100%", minHeight: "100%" }}
       >
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/9%E6%9C%8811%E6%97%A5%281%29-kXJ1gsy7cgQHMhAhgDf3WXOOUFF0d6.mp4" type="video/mp4" />
+        <source src="/videos/9月11日(1).mp4" type="video/mp4" />
       </video>
 
       <div className="absolute inset-0 bg-black/40 z-10"></div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} preload="auto">
-        <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/We%20were%20sittin_%20in%20class_%20watchin_%20Fox%20a-Fl77ZbUMdpw7zahKjYzBS8bBZ26YvS.mp3" type="audio/mpeg" />
+        <source src="/audio/southpark-theme.mp3" type="audio/mpeg" />
       </audio>
 
       <div className="fixed top-4 right-4 z-30">
@@ -240,9 +240,39 @@ export default function HomePage() {
               Join the South Park Universe
             </h2>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <SimpleButton className="text-xl px-8 py-4">Follow X</SimpleButton>
-              <SimpleButton className="text-xl px-8 py-4">Join Community</SimpleButton>
-              <SimpleButton className="text-xl px-8 py-4">Open Chart</SimpleButton>
+              <a
+                href="https://x.com/SouthPark_verse"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-xl
+                  bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg border-4 border-black
+                  shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                  hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
+              >
+                🐦 Follow X
+              </a>
+              <a
+                href="https://x.com/i/communities/1966768241793265996"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-xl
+                  bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg border-4 border-black
+                  shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                  hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
+              >
+                🏠 Join Community
+              </a>
+              <a
+                href="https://pump.fun/board"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 text-xl
+                  bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg border-4 border-black
+                  shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                  hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
+              >
+                📊 Open Chart
+              </a>
             </div>
           </div>
 
