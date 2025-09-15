@@ -40,16 +40,38 @@ export async function POST(req: NextRequest) {
     - Male/Ambiguous Design: " • Character design: simple geometric head shapes, large circular eyes with black pupils, tiny oval mouth."
     - Universal Style: " • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: simplistic and blocky bodies, often with short limbs and mitten-shaped hands."
 
-    EXAMPLE OUTPUT (for the image of the woman lying down in denim):
+    EXAMPLE OUTPUT (for the image of the woman in denim):
     A young woman with long, light brown hair is lying stiffly on her back on a light gray floor, her head turned to the side to look at the viewer. She wears a denim jacket and loose-fitting, wide-leg jeans, both in a medium-wash blue. The jacket is unbuttoned, revealing her midriff. Her facial expression is serious and composed. • Transform the subject into South Park cartoon style. • Character design: simple geometric head shapes, large circular eyes with black pupils and prominent eyelashes, tiny oval mouth. • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: simplistic and blocky bodies, often with short limbs and mitten-shaped hands.
     `;
 
-    const result = await gemini.generateContent({ /* ... same as before ... */ });
+    // This is the full, unabridged code for the API call and response
+    const result = await gemini.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: { mimeType: file.type, data: base64 },
+            },
+            {
+              text: structuredPrompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.1,
+      },
+    });
+
     const prompt = result.response.text();
     return NextResponse.json({ prompt });
 
   } catch (err: any) {
     console.error("Gemini error:", err);
-    return NextResponse.json({ error: err.message || "Failed to analyze" }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || "Failed to analyze" },
+      { status: 500 }
+    );
   }
 }
