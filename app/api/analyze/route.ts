@@ -16,9 +16,7 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
 
-    // --- V8.1 PROMPT TEMPLATE (Texture Sanitization) ---
-    // Change: Added a new rule to avoid descriptive words for materials/textures
-    // that imply shading, gloss, or complex lighting.
+    // V8.1 PROMPT TEMPLATE (Texture Sanitization) - Logic is correct
     const structuredPrompt = `You are an AI prompt generation assistant. Your task is to combine a hyper-detailed, style-neutral description of a user's image with a flexible, core-principles style guide that adapts based on the subject's gender.
 
     INSTRUCTIONS:
@@ -42,8 +40,9 @@ export async function POST(req: NextRequest) {
     - Do not add any other text, explanations, or formatting.
     `;
 
-    // The rest of the code remains the same...
-    const result = await genAI.generateContent({
+    // --- CORRECTION IS HERE ---
+    // The call must be made to the 'gemini' model instance, not the 'genAI' client factory.
+    const result = await gemini.generateContent({
       contents: [
         {
           role: "user",
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       generationConfig: {
-        temperature: 0.1, 
+        temperature: 0.1,
       },
     });
 
