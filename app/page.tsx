@@ -78,7 +78,7 @@ const SimpleButton = ({
     onClick={onClick}
     disabled={disabled}
     className={`
-      inline-flex items-center justify-center gap-2 px-6 py-3 
+      inline-flex items-center justify-center gap-2 px-6 py-3
       bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400
       text-white font-bold rounded-lg border-4 border-black
       shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
@@ -99,6 +99,7 @@ export default function HomePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isDraggingOver, setIsDraggingOver] = useState(false) // New state for drag-and-drop
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const scrollToArtFactory = () => {
@@ -106,15 +107,40 @@ export default function HomePage() {
       behavior: "smooth",
     })
   }
+  
+  // Helper function to process the selected file
+  const processFile = (file: File | undefined | null) => {
+    if (file && file.type.startsWith("image/")) {
+        setSelectedFile(file)
+        const url = URL.createObjectURL(file)
+        setPreviewUrl(url)
+        setError(null)
+    } else if (file) {
+        setError("Please upload a valid image file.")
+    }
+  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
-      setError(null)
-    }
+    processFile(file)
+  }
+  
+  // New: Drag and drop handlers
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDraggingOver(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDraggingOver(false)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDraggingOver(false)
+    const file = event.dataTransfer.files?.[0]
+    processFile(file)
   }
 
   const handleGenerate = async () => {
@@ -315,8 +341,17 @@ export default function HomePage() {
                       Respect My Upload Zone
                     </h2>
                   </div>
-
-                  <div className="border-4 border-dashed border-white rounded-xl p-4 sm:p-6 lg:p-8 text-center hover:border-yellow-400 hover:bg-yellow-400/10 transition-all duration-300">
+                  
+                  {/* --- MODIFIED DROP ZONE --- */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`
+                      border-4 border-dashed rounded-xl p-4 sm:p-6 lg:p-8 text-center transition-all duration-300
+                      ${isDraggingOver ? 'border-yellow-400 bg-yellow-400/20' : 'border-white hover:border-yellow-400 hover:bg-yellow-400/10'}
+                    `}
+                  >
                     <input
                       type="file"
                       accept="image/*"
