@@ -1,43 +1,44 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { type NextRequest, NextResponse } from "next/server"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" }); 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+// 使用更稳定的模型
+const gemini = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("image") as File | null;
+    const formData = await req.formData()
+    const file = formData.get("image") as File | null
+    // 强制目标风格为通用的卡通风格和加密货币（coin）背景
+    const style =
+      (formData.get("style") as string) ||
+      "modern cartoon style, digital art, flat design, vector logo, centered, clean lines"
+    
+    // 强制背景元素
+    const background_theme = "a stylized digital crypto coin or logo token in the background, a subtle glow, high detail, in the style of a brand logo"
+
 
     if (!file) {
-      return NextResponse.json({ error: "Image is required" }, { status: 400 });
+      return NextResponse.json({ error: "Image is required" }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
+    const bytes = await file.arrayBuffer()
+    const base64 = Buffer.from(bytes).toString("base64")
 
-    // --- V11 PROMPT TEMPLATE (Pose-Forcing) ---
-    // This is the final, most powerful version of the prompt template.
-    const structuredPrompt = `You are an expert South Park Animation Director. Your task is to analyze a real-world image and reinterpret its content and pose into a scene that could authentically appear in a South Park episode, translating it into a perfect prompt for an image generation AI.
+    // 核心修改: 结构化 Prompt，用于生成币 Logo 的描述
+    const structuredPrompt = `You are an expert prompt engineer for an image generation AI. Your goal is to rewrite a description of a user-provided image into a new artistic style, specifically for a **digital coin/token logo**.
 
-    INSTRUCTIONS:
-    1.  First, perform a detailed, style-neutral analysis of the image's content (who, what, where).
-    2.  **CRITICAL (Creative Pose Adaptation):** Analyze the subject's pose and adapt it. **This is your most important creative task.** The final prompt's success depends on correctly translating the original pose into a simplified but contextually similar South Park equivalent. Follow these rules:
-        - **If the pose is lying down, reclined, or lounging (like on a floor or bed):** YOU MUST translate it to a simplified 'lying flat' pose. The body should be stiff, like a fallen paper doll. The head can be turned to face the viewer to maintain engagement. This often looks comedic.
-        - **If the pose is dynamic (jumping, dancing, mid-air):** Translate it to a static standing pose but add context to convey the action (e.g., an excited expression).
-        - **If the pose involves complex interaction (hugging, fighting):** Translate it to two characters standing stiffly near each other with simple arm positions.
-        - **Default Pose:** For all other scenarios, simplify to a basic standing pose.
-    3.  **Generate Final Description:** Based on your adaptation, write a rich, descriptive paragraph of the *new, simplified scene*.
-        - **CRITICAL (Style & Texture Neutrality):** Do NOT use words referencing the original style ("photo") or complex textures ("satin", "glossy").
-        - **Content Details:** Describe the adapted scene, including clothing, colors, hair, accessories, and facial expression.
-    4.  **Assemble the Final Prompt:** Combine your new description with the appropriate gender-based style guide using " • " as a separator.
+**Target Art Style:**
+${style}
 
-    STYLE GUIDE RULES:
-    - Base Style: "Transform the subject into South Park cartoon style."
-    - Female Design: " • Character design: simple geometric head shapes, large circular eyes with black pupils and prominent eyelashes, tiny oval mouth."
-    - Male/Ambiguous Design: " • Character design: simple geometric head shapes, large circular eyes with black pupils, tiny oval mouth."
-    - Universal Style: " • Art style: construction-paper aesthetic, minimal shading, bold outlines, flat bright colors. • Body proportions: simplistic and blocky bodies, often with short limbs and mitten-shaped hands."
-    `;
+**Forced Background/Theme Elements:**
+${background_theme}
+
+**Instructions:**
+1. Silently analyze the provided image to identify the key elements: **subject (person/object), distinctive features, pose, and clothing/accessories**.
+2. Synthesize these elements into a descriptive prompt focusing only on the **central subject**.
+3. **CRITICAL REWRITE STEP:** Rewrite the combined subject description to perfectly match the **Target Art Style** and **Forced Background/Theme Elements**. The output should be a single, cohesive prompt that describes the subject as the central element of a coin/token logo.
+4. **CRITICAL:** Your final output must **ONLY** be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases, or markdown formatting. Just the raw text.`
 
     const result = await gemini.generateContent({
       contents: [
@@ -48,24 +49,21 @@ export async function POST(req: NextRequest) {
               inlineData: { mimeType: file.type, data: base64 },
             },
             {
-              text: structuredPrompt,
+              text: structuredPrompt, // 使用新的 Prompt
             },
           ],
         },
       ],
-      generationConfig: {
-        temperature: 0.1,
-      },
-    });
+    }, {
+      // 添加生成配置以降低随机性，确保更贴合指令
+      temperature: 0.2, 
+    })
 
-    const prompt = result.response.text();
-    return NextResponse.json({ prompt });
+    const prompt = result.response.text()
 
+    return NextResponse.json({ prompt })
   } catch (err: any) {
-    console.error("Gemini error:", err);
-    return NextResponse.json(
-      { error: err.message || "Failed to analyze" },
-      { status: 500 }
-    );
+    console.error("Gemini error:", err)
+    return NextResponse.json({ error: err.message || "Failed to analyze" }, { status: 500 })
   }
 }
