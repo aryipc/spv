@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 // 使用更稳定的模型
-const gemini = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
+const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
 export async function POST(req: NextRequest) {
   try {
