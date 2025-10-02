@@ -11,17 +11,13 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Starting image generation with ControlNet")
     const formData = await request.formData()
     const file = formData.get("image") as File | null
-    // 接收 Gemini 生成的完整 Prompt
     const geminiPrompt = formData.get("prompt") as string 
-
-    console.log("[v0] File received:", !!file, "Prompt received:", !!geminiPrompt)
 
     if (!file || !geminiPrompt || geminiPrompt.trim() === "") {
       return NextResponse.json({ error: "Image file and Prompt are required" }, { status: 400 })
     }
 
     // --- 1. 图片上传到 Fal 存储 ---
-    console.log("[v0] Uploading image to fal storage")
     let imageUrl: string
     try {
       imageUrl = await Promise.race([
@@ -39,36 +35,31 @@ export async function POST(request: NextRequest) {
     const logs: string[] = []
 
     // --- 2. 准备 ControlNet 参数 ---
-    // 目标 Prompt：使用 Gemini 的输出，并添加一些辅助修饰词来增强 Logo 效果
     const finalPrompt = geminiPrompt + ", centered, isolated, official token design, high contrast, clean background, 8K" 
-    
-    // 负面 Prompt：排除掉与 Coin Logo 不符的元素，并移除 photorealistic 以强化卡通风格
     const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, text, watermark, bad coin structure, frame, multiple objects, low saturation"
 
-    console.log("[v0] Starting fal-ai generation with SDXL ControlNet Canny")
+    console.log("[v0] Starting fal-ai generation with sdxl-controlnet/canny")
 
-    // --- 3. 调用 fal-ai/stable-diffusion-xl-controlnet-canny ---
+    // --- 3. 调用 fal-ai/sdxl-controlnet/canny ---
     const result = await Promise.race([
-      fal.subscribe("fal-ai/stable-diffusion-xl-controlnet-canny", { 
+      // *** 关键修改：更换为分层模型路径，解决 404 问题 ***
+      fal.subscribe("fal-ai/sdxl-controlnet/canny", { 
         input: {
-          // 原始图片 URL 作为 ControlNet 的输入图
           image_url: imageUrl, 
-          
-          // 描述（Gemini优化后的 Coin Logo 描述）
           prompt: finalPrompt, 
           negative_prompt: negativePrompt,
           
-          // 图像到图像的引导强度：0.65 允许大幅风格转换，但保留原图色彩和主题
-          image_conditioning_scale: 0.65, 
+          // 移除 image_conditioning_scale，简化输入，专注于 ControlNet 效果
+          // image_conditioning_scale: 0.65, 
           
           // Canny 结构引导的强度：1.0 强制遵循原始图片的边缘轮廓
           control_scale: 1.0, 
           
-          // 强制方形输出，适合 Coin Logo
+          // 强制方形输出
           height: 1024,
           width: 1024,
           
-          num_inference_steps: 30, // 增加步数提升质量
+          num_inference_steps: 30, 
           seed: 42, 
         },
         logs: true,
@@ -85,22 +76,16 @@ export async function POST(request: NextRequest) {
       ),
     ])
 
-    // --- 4. 解析结果 (保持原有健壮的解析逻辑) ---
+    // --- 4. 解析结果 (保持不变) ---
     if (!result) {
       throw new Error("No result returned from fal-ai")
     }
 
     let resultData = result.data || result
-    if (!resultData) {
-      resultData = result
-    }
 
     let generatedImageUrl: string | undefined
-
     if (resultData.images && Array.isArray(resultData.images) && resultData.images.length > 0) {
       generatedImageUrl = resultData.images[0].url || resultData.images[0]
-    } else if (resultData.image) {
-      generatedImageUrl = typeof resultData.image === "string" ? resultData.image : resultData.image.url
     } else if (resultData.url) {
       generatedImageUrl = resultData.url
     } else if (resultData.output && resultData.output.images) {
