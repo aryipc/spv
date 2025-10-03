@@ -3,103 +3,102 @@ import * as fal from "@fal-ai/serverless-client"
 
 // 确保 FAL_KEY 环境变量已设置
 fal.config({
-  credentials: process.env.FAL_KEY,
+	credentials: process.env.FAL_KEY,
 })
 
+// 锁定的模型：Nano Banana Edit
+const MODEL_ID_NANO = "fal-ai/nano-banana/edit"
+
 export async function POST(request: NextRequest) {
-  try {
-    console.log("[v0] Starting image generation with ControlNet")
-    const formData = await request.formData()
-    const file = formData.get("image") as File | null
-    const geminiPrompt = formData.get("prompt") as string 
+	try {
+		console.log(`[generate-image] Starting Nano-Banana generation with model: ${MODEL_ID_NANO}`)
 
-    if (!file || !geminiPrompt || geminiPrompt.trim() === "") {
-      return NextResponse.json({ error: "Image file and Prompt are required" }, { status: 400 })
-    }
+		// --- 1. 获取 JSON 数据 (只使用请求中传入的 URL 和 prompt) ---
+		// 注意: 此处要求请求体是 JSON 格式，包含 imageUrl 和 prompt
+		const { imageUrl, prompt: geminiPrompt } = await request.json()
 
-    // --- 1. 图片上传到 Fal 存储 ---
-    let imageUrl: string
-    try {
-      imageUrl = await Promise.race([
-        fal.storage.upload(file),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000),
-        ),
-      ])
-      console.log("[v0] Image uploaded successfully:", imageUrl)
-    } catch (uploadError: any) {
-      console.error("[v0] Upload error:", uploadError)
-      throw new Error(`Failed to upload image: ${uploadError.message}`)
-    }
+		// 确保 Prompt 中包含最强的背景隔离和身体姿势要求
+		const isolationSuffix = ", **centered, isolated logo on a pure white canvas, full body/pose included, no complex background, no extra person**"
+		const finalPrompt = geminiPrompt + isolationSuffix
+		
+		// 负面提示：强化排除写实背景和人物，以匹配矢量 Logo 风格
+		const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, 3d, realistic shading, gradients, human, man, woman, body, clothes, t-shirt, tank top, street, cityscape, complex background, car, shadow, texture, bokeh"
 
-    const logs: string[] = []
+		// finalImageUrl 直接使用请求传入的 URL
+		const finalImageUrl = imageUrl
 
-    // --- 2. 准备 ControlNet 参数 ---
-    const finalPrompt = geminiPrompt + ", centered, isolated, official token design, high contrast, clean background, 8K" 
-    const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, text, watermark, bad coin structure, frame, multiple objects, low saturation"
+		console.log(`[generate-image] Using Final Image URL: ${finalImageUrl}`)
+		console.log(`[generate-image] Using Final Prompt: ${finalPrompt.substring(0, 100)}...`)
 
-    console.log("[v0] Starting fal-ai generation with sdxl-controlnet/canny")
+		if (!finalImageUrl || !finalPrompt || finalPrompt.trim() === "") {
+			return NextResponse.json({ error: "Missing image URL or prompt" }, { status: 400 })
+		}
 
-    // --- 3. 调用 fal-ai/sdxl-controlnet/canny ---
-    const result = await Promise.race([
-      // *** 关键修改：更换为分层模型路径，解决 404 问题 ***
-      fal.subscribe("fal-ai/sdxl-controlnet/canny", { 
-        input: {
-          image_url: imageUrl, 
-          prompt: finalPrompt, 
-          negative_prompt: negativePrompt,
-          
-          // 移除 image_conditioning_scale，简化输入，专注于 ControlNet 效果
-          // image_conditioning_scale: 0.65, 
-          
-          // Canny 结构引导的强度：1.0 强制遵循原始图片的边缘轮廓
-          control_scale: 1.0, 
-          
-          // 强制方形输出
-          height: 1024,
-          width: 1024,
-          
-          num_inference_steps: 30, 
-          seed: 42, 
-        },
-        logs: true,
-        onQueueUpdate(update) {
-          if (update.logs) {
-            update.logs.forEach((l) => {
-              logs.push(l.message)
-            })
-          }
-        },
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000),
-      ),
-    ])
+		const apiKey = process.env.FAL_KEY
+		if (!apiKey) {
+			return NextResponse.json({ error: "Fal AI API key is not configured" }, { status: 500 })
+		}
 
-    // --- 4. 解析结果 (保持不变) ---
-    if (!result) {
-      throw new Error("No result returned from fal-ai")
-    }
+		const logs: string[] = []
 
-    let resultData = result.data || result
+		// --- 2. 调用 fal.subscribe (Nano-Banana 模式) ---
+		const result = await Promise.race([
+			fal.subscribe(MODEL_ID_NANO, {
+				input: {
+					image_urls: [finalImageUrl],
+					prompt: finalPrompt,
+					negative_prompt: negativePrompt,
+					
+					// 激进的风格转换强度 (0.85 尝试彻底重绘风格)
+					strength: 0.85,
+					
+					// 尝试获取透明背景的 PNG
+					output_format: "png",
+					remove_background: true, // 尝试使用背景移除参数
+					background: "white", // 额外的安全措施：如果不能透明，就用白色背景
 
-    let generatedImageUrl: string | undefined
-    if (resultData.images && Array.isArray(resultData.images) && resultData.images.length > 0) {
-      generatedImageUrl = resultData.images[0].url || resultData.images[0]
-    } else if (resultData.url) {
-      generatedImageUrl = resultData.url
-    } else if (resultData.output && resultData.output.images) {
-      generatedImageUrl = resultData.output.images[0]?.url || resultData.output.images[0]
-    }
+					width: 1024,
+					height: 1024,
+					num_images: 1,
+				},
+				logs: true,
+				onQueueUpdate(update) {
+					console.log("[generate-image] Queue update:", update)
+					if (update.logs) {
+						update.logs.forEach((l) => {
+							console.log("[generate-image] Log:", l.message)
+							logs.push(l.message)
+						})
+					}
+				},
+			}),
+			new Promise<never>((_, reject) =>
+				setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000),
+			),
+		])
 
-    if (!generatedImageUrl) {
-      throw new Error(`No image URL found in expected fields. Full response: ${JSON.stringify(resultData, null, 2)}`)
-    }
+		// --- 3. 结果解析和错误处理 ---
+		if (!result || !result.images || result.images.length === 0) {
+			console.log("[generate-image] No result or empty images array returned from fal-ai")
+			throw new Error("No image generated. The result was empty.")
+		}
 
-    console.log("[v0] Success! Generated image URL:", generatedImageUrl)
-    return NextResponse.json({ imageUrl: generatedImageUrl, logs })
-  } catch (error: any) {
-    console.error("[v0] Error generating image:", error)
-    return NextResponse.json({ error: error.message || "Failed to generate image" }, { status: 500 })
-  }
+		const generatedImageUrl = result.images[0]?.url
+
+		console.log("[generate-image] Extracted image URL:", generatedImageUrl)
+
+		if (!generatedImageUrl) {
+			console.log("[generate-image] No image URL found in the expected 'images' array field")
+			throw new Error(`No image URL found. Full response: ${JSON.stringify(result, null, 2)}`)
+		}
+
+		console.log("[generate-image] Success! Generated image URL:", generatedImageUrl)
+		return NextResponse.json({
+			imageUrl: generatedImageUrl,
+			logs: logs.length > 0 ? logs : undefined,
+		})
+	} catch (error: any) {
+		console.error("[generate-image] Error generating image:", error)
+		return NextResponse.json({ error: error.message || "Image generation failed" }, { status: 500 })
+	}
 }
