@@ -43,8 +43,8 @@ The entire composition should resemble a **polished, multi-element digital crypt
 export async function POST(req: NextRequest) {
 	try {
 		const formData = await req.formData()
-		// 注意：这里仍然使用 "file" 作为上传图片的字段名，这是因为你提供的代码使用的是 "file"
-		const file = formData.get("file") as File | null
+		// *** 关键修复：将字段名从 "file" 更改为 "image"，与 generate-image 路由保持一致。***
+		const file = formData.get("image") as File | null
 		
 		if (!file) {
 			return NextResponse.json({ error: "Image file is required." }, { status: 400 })
