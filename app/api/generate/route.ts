@@ -13,10 +13,32 @@ export async function POST(request: NextRequest) {
 	try {
 		console.log(`[generate-image] Starting Nano-Banana generation with model: ${MODEL_ID_NANO}`)
 
-		// --- 1. 获取 JSON 数据 (只使用请求中传入的 URL 和 prompt) ---
-		// 注意: 此处要求请求体是 JSON 格式，包含 imageUrl 和 prompt
-		const { imageUrl, prompt: geminiPrompt } = await request.json()
+		// --- 1. 关键：从 formData 获取文件和提示词 ---
+		const formData = await request.formData()
+		const file = formData.get("image") as File | null // 假设前端字段名为 'image'
+		const geminiPrompt = formData.get("prompt") as string // 假设前端字段名为 'prompt'
 
+		if (!file || !geminiPrompt || geminiPrompt.trim() === "") {
+			return NextResponse.json({ error: "Image file and Prompt are required" }, { status: 400 })
+		}
+
+		// --- 2. 关键：上传图片到 Fal 存储以获取 URL (因为 Nano-Banana/edit 需要一个 URL) ---
+		let finalImageUrl: string
+		try {
+			finalImageUrl = await Promise.race([
+				fal.storage.upload(file),
+				new Promise<never>((_, reject) =>
+					setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000),
+				),
+			])
+			console.log("[generate-image] Image uploaded successfully:", finalImageUrl)
+		} catch (uploadError: any) {
+			console.error("[generate-image] Upload error:", uploadError)
+			throw new Error(`Failed to upload image: ${uploadError.message}`)
+		}
+
+
+		// --- 3. 准备 Nano-Banana 参数 ---
 		// 确保 Prompt 中包含最强的背景隔离和身体姿势要求
 		const isolationSuffix = ", **centered, isolated logo on a pure white canvas, full body/pose included, no complex background, no extra person**"
 		const finalPrompt = geminiPrompt + isolationSuffix
@@ -24,38 +46,25 @@ export async function POST(request: NextRequest) {
 		// 负面提示：强化排除写实背景和人物，以匹配矢量 Logo 风格
 		const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, 3d, realistic shading, gradients, human, man, woman, body, clothes, t-shirt, tank top, street, cityscape, complex background, car, shadow, texture, bokeh"
 
-		// finalImageUrl 直接使用请求传入的 URL
-		const finalImageUrl = imageUrl
-
-		console.log(`[generate-image] Using Final Image URL: ${finalImageUrl}`)
 		console.log(`[generate-image] Using Final Prompt: ${finalPrompt.substring(0, 100)}...`)
-
-		if (!finalImageUrl || !finalPrompt || finalPrompt.trim() === "") {
-			return NextResponse.json({ error: "Missing image URL or prompt" }, { status: 400 })
-		}
-
-		const apiKey = process.env.FAL_KEY
-		if (!apiKey) {
-			return NextResponse.json({ error: "Fal AI API key is not configured" }, { status: 500 })
-		}
 
 		const logs: string[] = []
 
-		// --- 2. 调用 fal.subscribe (Nano-Banana 模式) ---
+		// --- 4. 调用 fal.subscribe (使用上传后的 URL) ---
 		const result = await Promise.race([
 			fal.subscribe(MODEL_ID_NANO, {
 				input: {
-					image_urls: [finalImageUrl],
+					image_urls: [finalImageUrl], // 使用上传后的 URL
 					prompt: finalPrompt,
 					negative_prompt: negativePrompt,
 					
-					// 激进的风格转换强度 (0.85 尝试彻底重绘风格)
+					// 激进的风格转换强度
 					strength: 0.85,
 					
 					// 尝试获取透明背景的 PNG
 					output_format: "png",
-					remove_background: true, // 尝试使用背景移除参数
-					background: "white", // 额外的安全措施：如果不能透明，就用白色背景
+					remove_background: true,
+					background: "white",
 
 					width: 1024,
 					height: 1024,
@@ -77,7 +86,7 @@ export async function POST(request: NextRequest) {
 			),
 		])
 
-		// --- 3. 结果解析和错误处理 ---
+		// --- 5. 结果解析和返回 (与旧代码相似的结构) ---
 		if (!result || !result.images || result.images.length === 0) {
 			console.log("[generate-image] No result or empty images array returned from fal-ai")
 			throw new Error("No image generated. The result was empty.")
@@ -85,10 +94,7 @@ export async function POST(request: NextRequest) {
 
 		const generatedImageUrl = result.images[0]?.url
 
-		console.log("[generate-image] Extracted image URL:", generatedImageUrl)
-
 		if (!generatedImageUrl) {
-			console.log("[generate-image] No image URL found in the expected 'images' array field")
 			throw new Error(`No image URL found. Full response: ${JSON.stringify(result, null, 2)}`)
 		}
 

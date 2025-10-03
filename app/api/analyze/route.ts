@@ -37,18 +37,16 @@ The entire composition should resemble a **polished, multi-element digital crypt
 2. **STYLE ADJUSTMENT:** If the subject is a **human or avatar**, ensure the style emphasizes **oversized proportions, simplicity, and a bold, cartoon/chibi aesthetic**. If the subject is an **object, animal, or machine**, focus on rendering it as a **clean, iconic vector symbol** that retains its key characteristics.
 3. Synthesize these identified elements and text into a descriptive prompt, **explicitly including the subject's pose, any visible hands, arms, or accessories**. Prioritize the extreme simplicity and flat aesthetic.
 4. **CRITICAL REWRITE STEP:** Your output prompt must use the legible text content and place it creatively as integrated design elements in the final logo structure.
-5. **CRITICAL (Isolation):** Your final output must end with the exact isolating phrase: ", **isolated, centered logo on a pure white canvas, full body/pose included, no complex background, no extra person**"
+5. **CRITICAL (Isolation):** Your final output must end with the exact isolating phrase: ", **isolated, centered logo on a pure white canvas, full body/pose included, no complex background, no extra person**" 
 6. **FINAL OUTPUT:** Your final output must **ONLY** be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases, or markdown formatting. Just the raw text.`; // <--- 确保这里的反引号和分号存在！
 
 export async function POST(req: NextRequest) {
 	try {
 		const formData = await req.formData()
-		// 注意: 第二个代码示例使用的是 "file" 字段名，第一个使用的是 "image"。
-		// 为了保持第二个代码的逻辑完整性，我使用 "file"。
+		// 注意：这里仍然使用 "file" 作为上传图片的字段名，这是因为你提供的代码使用的是 "file"
 		const file = formData.get("file") as File | null
-
+		
 		if (!file) {
-			// 将错误信息修改为第二个代码中的版本
 			return NextResponse.json({ error: "Image file is required." }, { status: 400 })
 		}
 
@@ -61,7 +59,7 @@ export async function POST(req: NextRequest) {
 					role: "user",
 					parts: [
 						{ inlineData: { mimeType: file.type, data: base64 } },
-						{ text: fullStructuredPromptText }, // 使用第二个代码中的完整 Prompt
+						{ text: fullStructuredPromptText },
 					],
 				},
 			],
