@@ -6,9 +6,6 @@ if (!process.env.GEMINI_API_KEY) {
 	throw new Error("GEMINI_API_KEY environment variable is not set.")
 }
 
-// ----------------------------------------------------
-// *** 注意：这里保持了原有模型和安全设置 ***
-// ----------------------------------------------------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 const gemini = genAI.getGenerativeModel({
@@ -16,7 +13,6 @@ const gemini = genAI.getGenerativeModel({
 	// 保持原有的安全设置
 })
 
-// *** 移除：硬币边框样式列表不再需要 ***
 
 export async function POST(req: NextRequest) {
 	try {
@@ -27,29 +23,27 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "Image file is required." }, { status: 400 })
 		}
 
-		// *** 移除：随机选择硬币样式的逻辑 ***
-
 		const bytes = await file.arrayBuffer()
 		const base64 = Buffer.from(bytes).toString("base64")
 
 		// ----------------------------------------------------
-		// *** Prompt Refactoring: 新的 Saiyan Aura 风格 ***
+		// *** Prompt Refactoring: 保持原始风格，添加黄色光环和币安Logo ***
 		// ----------------------------------------------------
-		const fullStructuredPromptText = `You are an expert prompt engineer for an image generation AI. Your goal is to rewrite a description of a user-provided image into a new artistic style, specifically a **Dragon Ball Z (DBZ) Super Saiyan Transformation** scene.
+		const fullStructuredPromptText = `You are an expert prompt engineer for an image generation AI. Your goal is to subtly modify a user-provided image by adding a powerful energy aura and a logo, while **strictly preserving the original artistic style (e.g., photorealistic, cartoon, anime, illustration) and subject's characteristics.**
 
 **Target Output Structure and Style:**
-A **hyper-detailed, dynamic Japanese anime illustration of the subject's entire body or upper torso**, captured in a **powerful, dynamic, or characteristic action pose**. The subject must be centered, with an **epic, serious, and cool expression**.
-**Crucially, the subject must be surrounded by a massive, sparkling, electric yellow and white energy aura**, just like a Super Saiyan.
-The **semi-transparent Binance (BNB) logo must be subtly integrated and glowing within the swirling Super Saiyan aura energy effect**. The logo should be an embedded effect, not a border.
-The overall aesthetic must be **professional, highly-detailed cel-shading anime illustration, intense lighting, and a strong sense of action and power**.
-The final image should resemble a **high-quality, modern DBZ-style collectible card art, focusing on the character's intense transformation moment.**
+The output must maintain the **exact original style (photorealistic, cartoon, anime, comic, illustration, 3D render, etc.)** of the subject and its presentation.
+The central subject, captured in its **original pose and expression**, should be enveloped in a **dynamic, sparkling, electric yellow and white energy aura**, similar to a powerful energy release. If the subject's expression allows, it should appear **cool or slightly intense/serious** within the aura.
+**Crucially, a semi-transparent Binance (BNB) logo must be subtly integrated and glowing within the swirling yellow and white energy effect of the aura**. The logo should be an embedded element within the energy, not a separate overlay.
+The aura should emanate from the subject's entire visible form (full body or upper torso).
+The overall composition should feel like an **enhanced version of the original image, with added power and branding, without altering the fundamental art style.**
 
 **Instructions:**
-1. Silently analyze the provided user image to accurately identify the **central subject**, its unique features, and the **specific pose and visible limbs/clothing**.
-2. **STYLE ADJUSTMENT:** Regardless of the original subject (human, object, or animal), render it in a **Dragon Ball Z-inspired anime style** with an emphasis on **power, sharp angles, and dynamic motion blur/effects**.
-3. Synthesize these identified elements into a descriptive prompt, **explicitly including the subject's pose, any visible hands, arms, or accessories**. Prioritize the epic, intense anime aesthetic.
-4. **CRITICAL REWRITE STEP:** Ensure the rewritten prompt explicitly calls for the **serious/cool expression**, the **electric Saiyan-style aura**, and the **Binance logo integration** in the aura.
-5. **CRITICAL (Isolation):** Your final output must end with the exact isolating phrase: ", **isolated, centered illustration on a dark, energy-filled, abstract background, full body/pose included, highly-detailed cel-shading, intense glow effect, no text, no frame**"
+1. Silently analyze the provided user image to accurately identify the **central subject**, its unique features, **and especially its exact artistic style**.
+2. **STYLE PRESERVATION:** The generated prompt **must emphasize maintaining the detected original style** (e.g., "photorealistic image of...", "cartoon drawing of...", "anime illustration of...") for the subject.
+3. Synthesize these identified elements into a descriptive prompt, **explicitly including the subject's original pose, any visible hands, arms, accessories, and most importantly, its original art style.**
+4. **CRITICAL ADDITION:** Ensure the rewritten prompt explicitly calls for the **electric yellow and white energy aura surrounding the subject** and the **subtle, semi-transparent Binance logo integrated within that aura.**
+5. **CRITICAL (Isolation):** Your final output must end with the exact isolating phrase: ", **isolated, centered, full body/pose included, intense yellow glow effect, subtle Binance logo embedded in aura, vibrant background, high detail**"
 6. **FINAL OUTPUT:** Your final output must **ONLY** be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases, or markdown formatting. Just the raw text.`;
 		
 		// ----------------------------------------------------
