@@ -15,9 +15,8 @@ export async function POST(request: NextRequest) {
 
 		// --- 1. 关键：从 formData 获取文件和提示词 ---
 		const formData = await request.formData()
-		// 统一使用 "image" 作为图片字段名，与 analyze 路由保持一致
-		const file = formData.get("image") as File | null 
-		const geminiPrompt = formData.get("prompt") as string 
+		const file = formData.get("image") as File | null // 假设前端字段名为 'image'
+		const geminiPrompt = formData.get("prompt") as string // 假设前端字段名为 'prompt'
 
 		if (!file || !geminiPrompt || geminiPrompt.trim() === "") {
 			return NextResponse.json({ error: "Image file and Prompt are required" }, { status: 400 })
@@ -40,12 +39,11 @@ export async function POST(request: NextRequest) {
 
 
 		// --- 3. 准备 Nano-Banana 参数 ---
-		// 确保 Prompt 中包含最强的背景隔离和身体姿势要求
-		const isolationSuffix = ", **centered, isolated logo on a pure white canvas, full body/pose included, no complex background, no extra person**"
-		const finalPrompt = geminiPrompt + isolationSuffix
+		// 优化 1: 移除重复的 isolationSuffix，依赖 Gemini Prompt 中已包含的隔离短语
+		const finalPrompt = geminiPrompt
 		
-		// 负面提示：强化排除写实背景和人物，以匹配矢量 Logo 风格
-		const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, 3d, realistic shading, gradients, human, man, woman, body, clothes, t-shirt, tank top, street, cityscape, complex background, car, shadow, texture, bokeh"
+		// 优化 2: 微调负面提示词，更明确地排除体积和深度，强化平面设计
+		const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, 3d, realistic shading, gradients, shadow, texture, bokeh, complex background, complex shadows, depth of field, volume, human, man, woman, body, clothes, t-shirt, tank top, street, cityscape, car"
 
 		console.log(`[generate-image] Using Final Prompt: ${finalPrompt.substring(0, 100)}...`)
 
@@ -64,8 +62,10 @@ export async function POST(request: NextRequest) {
 					
 					// 尝试获取透明背景的 PNG
 					output_format: "png",
+					// 保持 'remove_background: true' 和 'background: "white"' 
+					// 因为它们在 Nano Banana Edit 中能有效简化背景
 					remove_background: true,
-					background: "white",
+					background: "white", 
 
 					width: 1024,
 					height: 1024,
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 			),
 		])
 
-		// --- 5. 结果解析和返回 ---
+		// --- 5. 结果解析和返回 (与旧代码相似的结构) ---
 		if (!result || !result.images || result.images.length === 0) {
 			console.log("[generate-image] No result or empty images array returned from fal-ai")
 			throw new Error("No image generated. The result was empty.")
