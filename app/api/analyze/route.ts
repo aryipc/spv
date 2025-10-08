@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 		const base64 = Buffer.from(bytes).toString("base64")
 
 		// ----------------------------------------------------
-		// *** 最终 Prompt：保留风格，移除名人身份，指定 Binance Logo ***
+		// *** 最终 Prompt：保留风格，移除所有生物特征/身份，指定 Binance Logo ***
 		// ----------------------------------------------------
 		const fullStructuredPromptText = `You are an expert prompt engineer for an image generation AI. Your goal is to subtly modify a user-provided image by adding a powerful energy aura and a specific branded logo, while **strictly preserving the original artistic style (e.g., photorealistic, cartoon, anime, illustration) and subject's characteristics.**
 
@@ -41,7 +41,7 @@ The overall composition should feel like an **enhanced, dramatic version of the 
 
 **Instructions:**
 1. Silently analyze the provided user image to accurately identify the **central subject**, its unique features, **and especially its exact artistic style**.
-2. **CRITICAL NAME/IDENTITY REMOVAL:** **Do NOT include any proper nouns, specific names, brand names, company names, or any terms that imply a specific title, profession, or identity (e.g., CEO, founder, president).** You must use only **purely descriptive language** based on the visual appearance of the subject (e.g., "A man with short dark hair, glasses, and a beard").
+2. **CRITICAL NAME/IDENTITY REMOVAL:** **Do NOT include any proper nouns, specific names, brand names, company names, or any terms that imply a specific title, profession, or identity (e.g., CEO, founder, president).** **Furthermore, remove all specific biological or ethnic descriptors (e.g., 'East Asian', 'blonde hair', 'mole near her mouth', 'short buzz cut')**. You must use only **purely generic descriptors** focusing on clothes, pose, and hair style (e.g., "A person with long dark hair, wearing a white blazer and a necklace").
 3. **STYLE PRESERVATION:** The generated prompt **must emphasize maintaining the detected original style** (e.g., "photorealistic image of...", "cartoon drawing of...") for the subject.
 4. Synthesize these identified elements into a descriptive prompt, **explicitly including the subject's original pose, any visible hands, arms, accessories, and most importantly, its original art style.**
 5. **CRITICAL ADDITION:** Ensure the rewritten prompt explicitly calls for the **soft, highly diffused yellow energy haze/glow spreading outwards**, the **strong yellow color cast on the subject**, the **dark, high-contrast lighting**, and the **multiple, scattered, subtle Binance (BNB) logos embedded in the aura.**
