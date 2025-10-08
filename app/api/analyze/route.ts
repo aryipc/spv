@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 		const base64 = Buffer.from(bytes).toString("base64")
 
 		// ----------------------------------------------------
-		// *** Prompt Refactoring: 最终版 - 强制移除专有名词和品牌名称 ***
+		// *** Prompt Refactoring: 最终版 - 强制移除专有名词、品牌名称和身份描述 ***
 		// ----------------------------------------------------
 		const fullStructuredPromptText = `You are an expert prompt engineer for an image generation AI. Your goal is to subtly modify a user-provided image by adding a powerful energy aura and a logo, while **strictly preserving the original artistic style (e.g., photorealistic, cartoon, anime, illustration) and subject's characteristics.**
 
@@ -41,10 +41,10 @@ The overall composition should feel like an **enhanced, dramatic version of the 
 
 **Instructions:**
 1. Silently analyze the provided user image to accurately identify the **central subject**, its unique features, **and especially its exact artistic style**.
-2. **CRITICAL NAME REMOVAL:** **Do NOT include any proper nouns, specific names (like Changpeng Zhao), brand names (like Binance), company names, or text found in the image in your final output.** You must use only **descriptive language** for the subject (e.g., "A CEO-like man with glasses and a beard").
-3. **STYLE PRESERVATION:** The generated prompt **must emphasize maintaining the detected original style** (e.g., "photorealistic image of...", "cartoon drawing of...", "anime illustration of...") for the subject.
+2. **CRITICAL NAME/IDENTITY REMOVAL:** **Do NOT include any proper nouns, specific names, brand names, company names, or any terms that imply a specific title, profession, or identity (e.g., CEO, founder, president).** You must use only **purely descriptive language** based on the visual appearance of the subject (e.g., "A man with short dark hair, glasses, and a beard").
+3. **STYLE PRESERVATION:** The generated prompt **must emphasize maintaining the detected original style** (e.g., "photorealistic image of...", "cartoon drawing of...") for the subject.
 4. Synthesize these identified elements into a descriptive prompt, **explicitly including the subject's original pose, any visible hands, arms, accessories, and most importantly, its original art style.**
-5. **CRITICAL ADDITION:** Replace "Binance" with **"cryptocurrency logo/token symbol"** in the description of the aura. Ensure the rewritten prompt explicitly calls for the **soft, highly diffused yellow energy haze/glow spreading outwards**, the **strong yellow color cast on the subject**, the **dark, high-contrast lighting**, and the **multiple, scattered, subtle cryptocurrency logos embedded in the aura.**
+5. **CRITICAL ADDITION:** Ensure the rewritten prompt explicitly calls for the **soft, highly diffused yellow energy haze/glow spreading outwards**, the **strong yellow color cast on the subject**, the **dark, high-contrast lighting**, and the **multiple, scattered, subtle cryptocurrency logos embedded in the aura.**
 6. **CRITICAL (Isolation):** Your final output must end with the exact isolating phrase: ", **isolated, centered, full body/pose included, highly diffused soft yellow glow effect, multiple scattered subtle cryptocurrency logos embedded in aura, dark background, intense yellow rim lighting, high detail**"
 7. **FINAL OUTPUT:** Your final output must **ONLY** be the rewritten prompt text itself. Do not include any extra words, explanations, introductory phrases, or markdown formatting. Just the raw text.`;
 		
