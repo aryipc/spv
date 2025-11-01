@@ -1,116 +1,85 @@
-import { type NextRequest, NextResponse } from "next/server"
-import * as fal from "@fal-ai/serverless-client"
+import { type NextRequest, NextResponse } from "next/server";
+import * as fal from "@fal-ai/serverless-client";
 
-// 确保 FAL_KEY 环境变量已设置
+// Configure the fal-ai client with your credentials
 fal.config({
-	credentials: process.env.FAL_KEY,
-})
-
-// 锁定的模型：Nano Banana Edit
-const MODEL_ID_NANO = "fal-ai/nano-banana/edit"
-
-// *** 关键：硬编码 Binance Logo 的直接 URL ***
-const BINANCE_LOGO_URL = "https://pbs.twimg.com/media/G2vGq0AXYAAcBO7?format=png&name=900x900"; 
-// 替换为更清晰的 Logo 描述，与 Gemini Prompt 保持一致
-const BINANCE_LOGO_PROMPT_KEYWORD = "Binance (BNB) logo";
-
+  credentials: process.env.FAL_KEY,
+});
 
 export async function POST(request: NextRequest) {
-	try {
-		console.log(`[generate-image] Starting Nano-Banana generation with model: ${MODEL_ID_NANO}`)
+  try {
+    console.log("[v1] Starting imagen4 generation");
+    const formData = await request.formData();
+    
+    // REMOVED: No longer need to get an image file
+    // const file = formData.get("image") as File | null
 
-		// --- 1. 关键：从 formData 获取文件和提示词 ---
-		const formData = await request.formData()
-		const file = formData.get("image") as File | null 
-		const geminiPrompt = formData.get("prompt") as string 
+    // Get the prompt and the desired model tier from the form data
+    const prompt = formData.get("prompt") as string;
+    const model = (formData.get("model") as string) || "Imagen 4"; // Default to standard model
 
-		if (!file || !geminiPrompt || geminiPrompt.trim() === "") {
-			return NextResponse.json({ error: "Image file and Prompt are required" }, { status: 400 })
-		}
+    console.log("[v1] Prompt received:", !!prompt, "Model selected:", model);
+    console.log("[v1] Prompt content:", prompt);
 
-		// --- 2. 关键：上传用户图片到 Fal 存储以获取 URL ---
-		let finalImageUrl: string
-		try {
-			finalImageUrl = await Promise.race([
-				fal.storage.upload(file),
-				new Promise<never>((_, reject) =>
-					setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000),
-				),
-			])
-			console.log("[generate-image] Image uploaded successfully:", finalImageUrl)
-		} catch (uploadError: any) {
-			console.error("[generate-image] Upload error:", uploadError)
-			throw new Error(`Failed to upload image: ${uploadError.message}`)
-		}
+    // REMOVED: The check for a file is no longer necessary
+    // if (!file) { ... }
 
+    if (!prompt || prompt.trim() === "") {
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+    }
 
-		// --- 3. 准备 Nano-Banana 参数 ---
-		// 依赖 Gemini Prompt 中已经包含的隔离短语
-		const finalPrompt = geminiPrompt
-		
-		// 负面提示词保持优化后的版本
-		const negativePrompt = "photorealistic, photo, messy, low resolution, ugly, blurry, 3d, realistic shading, gradients, shadow, texture, bokeh, complex background, complex shadows, depth of field, volume, human, man, woman, body, clothes, t-shirt, tank top, street, cityscape, car"
+    // REMOVED: The entire image upload block is gone as it's not needed for Text-to-Image
+    
+    const logs: string[] = [];
 
-		console.log(`[generate-image] Using Final Prompt: ${finalPrompt.substring(0, 100)}...`)
+    console.log(`[v1] Starting fal-ai generation with imagen4/preview using model: ${model}`);
 
-		const logs: string[] = []
+    const result = await Promise.race([
+      fal.subscribe("fal-ai/imagen4/preview", {
+        input: {
+          // UPDATED: Input now uses model_name and does not need image_urls
+          prompt,
+          model_name: model,
+          num_images: 1,
+          output_format: "jpeg",
+        },
+        logs: true,
+        onQueueUpdate(update) {
+          console.log("[v1] Queue update:", update);
+          if (update.logs) {
+            update.logs.forEach((l) => {
+              console.log("[v1] Log:", l.message);
+              logs.push(l.message);
+            });
+          }
+        },
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000)
+      ),
+    ]);
 
-		// --- 4. 调用 fal.subscribe (使用上传后的用户图片 URL 和硬编码的 Logo URL) ---
-		const result = await Promise.race([
-			fal.subscribe(MODEL_ID_NANO, {
-				input: {
-					// *** 关键修改：将用户图片和 Logo 图片都作为输入 ***
-					image_urls: [finalImageUrl, BINANCE_LOGO_URL], 
-					prompt: finalPrompt,
-					negative_prompt: negativePrompt,
-					
-					// 激进的风格转换强度
-					strength: 0.85,
-					
-					// 尝试获取透明背景的 PNG
-					output_format: "png",
-					remove_background: true,
-					background: "dark", // 使用 dark 背景更适合暗黑光环效果
+    console.log("[v1] Full generation result:", JSON.stringify(result, null, 2));
 
-					width: 1024,
-					height: 1024,
-					num_images: 1,
-				},
-				logs: true,
-				onQueueUpdate(update) {
-					console.log("[generate-image] Queue update:", update)
-					if (update.logs) {
-						update.logs.forEach((l) => {
-							console.log("[generate-image] Log:", l.message)
-							logs.push(l.message)
-						})
-					}
-				},
-			}),
-			new Promise<never>((_, reject) =>
-				setTimeout(() => reject(new Error("Generation timeout after 120 seconds")), 120000),
-			),
-		])
+    if (!result || !result.images || result.images.length === 0) {
+      console.log("[v1] No result or empty images array returned from fal-ai");
+      throw new Error("No image generated. The result was empty.");
+    }
 
-		// --- 5. 结果解析和返回 ---
-		if (!result || !result.images || result.images.length === 0) {
-			console.log("[generate-image] No result or empty images array returned from fal-ai")
-			throw new Error("No image generated. The result was empty.")
-		}
+    // SIMPLIFIED: Newer models like Imagen 4 have a consistent response structure.
+    const generatedImageUrl = result.images[0]?.url;
 
-		const generatedImageUrl = result.images[0]?.url
+    console.log("[v1] Extracted image URL:", generatedImageUrl);
 
-		if (!generatedImageUrl) {
-			throw new Error(`No image URL found. Full response: ${JSON.stringify(result, null, 2)}`)
-		}
+    if (!generatedImageUrl) {
+      console.log("[v1] No image URL found in the expected 'images' array field");
+      throw new Error(`No image URL found. Full response: ${JSON.stringify(result, null, 2)}`);
+    }
 
-		console.log("[generate-image] Success! Generated image URL:", generatedImageUrl)
-		return NextResponse.json({
-			imageUrl: generatedImageUrl,
-			logs: logs.length > 0 ? logs : undefined,
-		})
-	} catch (error: any) {
-		console.error("[generate-image] Error generating image:", error)
-		return NextResponse.json({ error: error.message || "Image generation failed" }, { status: 500 })
-	}
+    console.log("[v1] Success! Generated image URL:", generatedImageUrl);
+    return NextResponse.json({ imageUrl: generatedImageUrl, logs });
+  } catch (error: any) {
+    console.error("[v1] Error generating image:", error);
+    return NextResponse.json({ error: error.message || "Failed to generate image" }, { status: 500 });
+  }
 }
